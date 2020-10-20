@@ -1,3 +1,4 @@
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 <h1> PPT Transeverse Code </h1>
 
 This is a Matlab code to calculate the electron current, plasma sheath- and plasma bulk potential drop in a Pulsed Plasma Thruster channel given an input of externally appied voltage, plasma properties and PPT design parameters. This code is intended to be solved iteratively allongside an Axial code that solves the axial plasma propogation speed, density, electron temperature and magnetic field.
