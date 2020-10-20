@@ -1,4 +1,4 @@
-<h1> PPT Transeverse Code <h1>
+<h1> PPT Transeverse Code </h1>
 
 This is a Matlab code to calculate the electron current, plasma sheath- and plasma bulk potential drop in a Pulsed Plasma Thruster channel given an input of externally appied voltage, plasma properties and PPT design parameters. This code is intended to be solved iteratively allongside an Axial code that solves the axial plasma propogation speed, density, electron temperature and magnetic field.
 
@@ -6,7 +6,7 @@ The PPT is the oldest flight tested electric propulsion device. It operates by i
 
 This code is based on a plasma model developped by Mario Merino, an associate professor and researcher at the Space Propulsion and at the PLasma and Spae Propulsion team (EP2) of Universidad Carlos III. The code itself was developped by Yonis le Grand, a graduate student of Aerospace Engineering at TU Delft and Nuclear Fusion at TU Eindhoven, while working on his graduation project under the supervision of Mario Merino.
 
-<h2> Usage <h2>
+<h2> Usage </h2>
  
 To resolve the current properties of the plasma call upon the function `transversal_V3.m`, located in `+transveramodel/+main/`. This function does precalcations than calls upon `total_current.m` to resolve the model equations. It's subfunctions can be found in the folder `+transveramodel/+subfunctions/`. These include equations that calculate the collision rate, electron emissions, sheath electric field and sheath electron flux.
 
