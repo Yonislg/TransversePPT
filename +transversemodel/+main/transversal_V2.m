@@ -1,6 +1,7 @@
 % Transversal model
 % Created 08/04/2020 by Yonis le Grand
-
+clear all
+close all
 %Physical constants
 global k e eps_0 hbar m_e m_i mu_0 u_ze imeq F_SEE F_FEE F_TEE;
 import transversemodel.subfunctions.*;
@@ -29,14 +30,14 @@ else
     fprintf('\nSecondary electron emmissions are not included');
 end
 
-F_TEE=1; %Include SEE 
+F_TEE=0; %Include SEE 
 if F_TEE
     fprintf('\nThermal electron emmissions are included');
 else
     fprintf('\nThermal electron emmissions are not included');
 end
 
-F_FEE=1; %Include FEE 
+F_FEE=0; %Include FEE 
 if F_FEE
     fprintf('\nField electron emmissions are included');
 else
@@ -65,8 +66,14 @@ phi_A =  1000;          % Anode potential
 phi_C = 0;%0;           % Cathode potenital
 h = 0.05;               % Distance between electrodes
 L = 0.08;               % Length of electrodes
+Z = 1;                  % ionisation number
+a_iz = 0.5;              % ionisation degree
 
-plasma_properties = {Te, ne_0, ui0};
+% neutral density and ion density
+n_n = (1-a_iz)/a_iz*ne_0;
+%n_i = ne_0/Z;
+
+plasma_properties = {Te, ne_0, n_n, Z, ui0};
 design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
 
 %% Initial Guesses for electrode emissions, Wall cleaelectric field
@@ -74,7 +81,7 @@ varphi_sf = 0.5*log(2*pi*m_e/m_i) % Guess for sheath potential drop assuming Ti=
 
 
 VA_guess= log(2*exp(varphi_sf)/(1+exp(e*(phi_C-phi_A)/Te)))%varphi_sf%%+2
-VC_guess= varphi_sf-10%(phi_A-phi_C)-VA_guess%log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))%varphi_sf-10%VA_guess%-4
+VC_guess= phi_C-(phi_A+varphi_sf)%(phi_A-phi_C)-VA_guess%log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))%varphi_sf-10%VA_guess%-4
 %gem_guess =  -SEE(gi, E_i, W);% 
 %ge_SEE= SEE(gi, E_i, W);  % SEE portion of electron emissions
 

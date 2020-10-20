@@ -1,4 +1,5 @@
 function nu = collRate_ei(n,Z,T_e) 
+    % n is the ion density!!!
     m_e = 9.1093837015e-31; % is correct
  
     e = 1.602176634e-19;

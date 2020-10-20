@@ -61,11 +61,14 @@ n_iter = 20;
 
 r_T_wka = [300 400 500 600 700];          % Anode temperture [k]
 r_T_wkc = [500 600 700 800];          % Cathode temperture [k]
-r_ne_0 = linspace(10^20,2*10^23, n_iter);           % Electron density  [m^-3]  2*10^22 3*10^22 4*10^22 
+r_ne_0 = linspace(10^20,9*10^22, n_iter);           % Electron density  [m^-3]  2*10^22 3*10^22 4*10^22 
 r_Te = linspace(e,3*e,T_iter);               % Electron Temperature in joules (not eV!)
 r_phi_A =  [10 100 1000];          % Anode potential 
 r_h = [0.01 0.02 0.05];               % Distance between electrodes
 r_C_guess = [0 5 10 30];
+% Ionisation parameters 
+a_iz = 0.5;     %ionisation degree
+Z = 1;          %Ion charge number
 
 iter = 2500
 %% Setting up tables
@@ -150,14 +153,15 @@ for p=1
     T_wka = r_T_wka(n); 
     T_wkc = r_T_wkc(m);
     ne_0 = r_ne_0(j);
+    n_n = (1-a_iz)/a_iz*ne_0;
     phi_A = r_phi_A(v);
     h = r_h(3);
     C_guess = r_C_guess(p);
     
-    ui0 = sqrt(Te/m_i);      % Ion sheath boundary velocity
+    %ui0 = sqrt(Te/m_i);      % Ion sheath boundary velocity
     
 
-    plasma_properties = {Te, ne_0, ui0};
+    plasma_properties = {Te, ne_0,n_n,Z};
     design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
     
     [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);

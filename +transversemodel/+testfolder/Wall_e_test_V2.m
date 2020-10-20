@@ -15,8 +15,8 @@ m_i = 1.67262192369e-27;
 mu_0 = 1.2566370614359173e-06;
 
 %% Input parameters
-CorF = 0.6;         % Exponentail facors
-Twk = 700;          % Wall Electric temperature in Kelvin
+CorF = 0.7;         % Exponentail facors
+Twk = 1000;          % Wall Electric temperature in Kelvin
 Twj  = Twk*k;       % Wall Temperature in Joules
 E_i = 13.6;         % Ionization energy of hydrogen in electronvolt [eV]
 W = 4.0;            % Workfunction
@@ -41,9 +41,9 @@ varphi = linspace(-1,-1000,iter);
 
 C = N;%N.*V;
 
-[E_w, E_w0, E_w1, E_w2] = itertemp(1, N, V, E_i, W, CorF, Twk, A_G, E_F);
+[E_w, E_w0, E_w1, E_w2] = itertemp(3, N, V, E_i, W, CorF, Twk, A_G, E_F);
 
-fiure(1)
+figure(1)
 surf(N,V,reldif(E_w,E_w0),C)
 title("Relative influence of all emissionsons on E_W")
 xlabel("density [m^{-3}]")
@@ -141,6 +141,8 @@ global e m_i
 end
 
 function E = iterfield(Twk, varphi, gi, n, Te, A_G, E_i, W, E_F, CorF)
+
+    import transversemodel.subfunctions.*;
 
     ge_s = SEE(gi, E_i, W);
     E_w = wall_e_field(Twk, varphi, ge_s, n, Te);

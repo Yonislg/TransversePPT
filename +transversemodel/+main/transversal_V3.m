@@ -18,7 +18,7 @@ hbar = 1.0546e-34;
 
 
    
-[Te, ne_0, ui0] = deal(plasma_properties{:});
+[Te, ne_0,n_n, Z] = deal(plasma_properties{:});
     nb=ne_0;
     [T_wka, T_wkc, E_i, A_G, h, L, W, E_Fin] = deal(design_parameters{:});
 
@@ -36,7 +36,7 @@ varphi_sf = 0.5*log(2*pi*m_e/m_i); % Guess for sheath potential drop assuming Ti
 
 
 VA_guess= log(2*exp(varphi_sf)/(1+exp(e*(phi_C-phi_A)/Te)));%varphi_sf%%+2
-VC_guess= varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))%varphi_sf-10%VA_guess%-4
+VC_guess=  varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))%varphi_sf-10%VA_guess%-4% ( phi_C-(phi_A+varphi_sf))/2;%
 %gem_guess =  -SEE(gi, E_i, W);% 
 %ge_SEE= SEE(gi, E_i, W);  % SEE portion of electron emissions
 

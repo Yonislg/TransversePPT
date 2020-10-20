@@ -1,16 +1,22 @@
 % This equation calculates the current in a 0D system using 7 eq's provided
-% by mario
+% by mario (describe differently lol)
 
 function jxe_v2 = total_current(x, plasma_properties,design_parameters, phi_A, phi_C)
+    %% prepping script
     import transversemodel.subfunctions.*;
-    global m_i mu_0 m_e e u_ze imeq F_SEE F_FEE;
-
-
-    [Te, ne_0, ui0] = deal(plasma_properties{:});
+    global m_i u_ze imeq F_SEE F_FEE;
+    % Physiscs constsants
+    e = 1.602176634e-19;
+    m_e = 9.1093837015e-31;
+    
+    %loading from code
+    [Te, ne_0, n_n, Z] = deal(plasma_properties{:});
+    % bulk density, probably double of sheat edge density
     nb=ne_0;
     [T_wka, T_wkc, E_i, A_G, h, L, W, E_Fin] = deal(design_parameters{:});
+    n_i= ne_0/Z;
 if F_SEE
-    ge_SEE = SEE(ne_0*sqrt(Te/m_i), E_i, W);
+    ge_SEE = SEE(n_i*sqrt(Te/m_i), E_i, W);
 else 
     ge_SEE = 0;
 end
@@ -21,8 +27,10 @@ else
     E_F = 0;
 end
     vth_e = sqrt(Te/m_e);% 1D RMS Thermal velocity of electrons
+    
+    %% the system of eqautions
     % Cathode electric field
-    jxe_v2(1) = wall_e_field(T_wkc, x(1),x(3),ne_0, Te) - x(5); 
+    jxe_v2(1) = (wall_e_field(T_wkc, x(1),x(3),ne_0, Te) - x(5)); 
     %Cathode lectron emissions
     jxe_v2(2) = - x(3)  + schottky(T_wkc, W, x(5), A_G)+ ge_SEE + FEE(W,E_F, x(5));
     % Average of fluxes
@@ -39,6 +47,6 @@ end
     jxe_v2(6) = wall_e_field(T_wka, x(2),x(4),ne_0, Te) -x(6);  
     % Momentum equation
     if imeq
-        jxe_v2(7) = -e*nb*(phi_A-x(2)*Te/e-(phi_C-x(1)*Te/e))/h - x(7)*m_e*nb*(collRate_ei(nb,1,Te)+nb*vth_e*10^(-20));%+ u_ze*(e*ne_0*L*x(7)*mu_0); % Bulk current
+        jxe_v2(7) = -e*nb*(phi_A-x(2)*Te/e-(phi_C-x(1)*Te/e))/h - x(7)*m_e*nb*(collRate_ei(n_i,Z,Te)+n_n*vth_e*10^(-20));%+ u_ze*(e*nb*L*x(7)*mu_0); % Bulk current
     end
 end
