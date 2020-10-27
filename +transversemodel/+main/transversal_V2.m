@@ -73,7 +73,7 @@ a_iz = 0.5;              % ionisation degree
 n_n = (1-a_iz)/a_iz*ne_0;
 %n_i = ne_0/Z;
 
-plasma_properties = {Te, ne_0, n_n, Z, ui0};
+plasma_properties = {Te, ne_0, n_n, Z};
 design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
 
 %% Initial Guesses for electrode emissions, Wall cleaelectric field
