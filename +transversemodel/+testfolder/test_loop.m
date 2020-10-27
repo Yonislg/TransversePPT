@@ -7,13 +7,16 @@ clear all
 import transversemodel.subfunctions.*;
 import  transversemodel.main.*;
 %Physical constants
-global k e eps_0 hbar m_e m_i mu_0 u_ze imeq F_SEE F_FEE F_TEE;
+global k e eps_0 hbar m_e mu_0 imeq F_SEE F_FEE F_TEE;
+
+
+% To be added :  u_ze 
 
 k = physconst('boltzmann');     % Bolzmann Constant [J/K]
 e = 1.602176634e-19;
 eps_0 = 8.854187817620389e-12; 
-m_e = 9.1093837015e-31;
-m_i = 1.67262192369e-27;
+m_e = 9.1093837015e-31;         
+m_i = 1.67262192369e-27;        % Ion mass, assumed to be equal to one proton
 mu_0 = 1.2566370614359173e-06;
 hbar = 1.0546e-34;
 
@@ -53,22 +56,24 @@ E_i = 13.6;             % Ionization energy of hydrogen in electronvolt [eV]
 E_F = 7;                % Fermi energy [eV]
 phi_C = 0;           % Cathode potenital
 L = 0.08;      
-A_G = 80*10^4;
+A_G = 80*10^4;          % Material constant for Schottkey equation
 
 % parameter ranges:
 T_iter=20;
 n_iter = 20;
 
-r_T_wka = [300 400 500 600 700];          % Anode temperture [k]
-r_T_wkc = [500 600 700 800];          % Cathode temperture [k]
+r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
+r_T_wkc = [500 600 700 800];                        % Cathode temperture [k]
 r_ne_0 = linspace(10^20,9*10^22, n_iter);           % Electron density  [m^-3]  2*10^22 3*10^22 4*10^22 
-r_Te = linspace(e,3*e,T_iter);               % Electron Temperature in joules (not eV!)
-r_phi_A =  [10 100 1000];          % Anode potential 
-r_h = [0.01 0.02 0.05];               % Distance between electrodes
+r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
+r_phi_A =  [10 100 1000];                           % Anode potential 
+r_h = [0.01 0.02 0.05];                             % Distance between electrodes
 r_C_guess = [0 5 10 30];
+
 % Ionisation parameters 
 a_iz = 0.5;     %ionisation degree
 Z = 1;          %Ion charge number
+
 
 iter = 2500
 %% Setting up tables
@@ -161,7 +166,7 @@ for p=1
     %ui0 = sqrt(Te/m_i);      % Ion sheath boundary velocity
     
 
-    plasma_properties = {Te, ne_0,n_n,Z};
+    plasma_properties = {Te, ne_0,n_n,Z, m_i};
     design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
     
     [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);

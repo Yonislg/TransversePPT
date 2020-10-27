@@ -1,24 +1,33 @@
 % Transversal model V3
+% This code prepares inputs for the total_current.m by making an initial
+% estimates, it than processes the output.
+% This version (V3) can be called upon by other scripts that determine
+% inputs and outputs, which is preferable when making a large amount of iterations over wide ragnes.
+% The other version (V2) is integrated in a testing script which is
+% benefificial when making quick simple calculations.
 % Created 08/04/2020 by Yonis le Grand
 
 
 function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess)%, F_TEE, F_FEE, F_SEE, imeq)
 
 %Physical constants
-global k e eps_0 hbar m_e m_i mu_0 u_ze imeq F_SEE F_FEE F_TEE;
+global k e eps_0 hbar m_e mu_0 F_FEE F_TEE;
 import transversemodel.subfunctions.*;
 
+% To be included:  u_ze 
+
+%% Physics constants
 k = physconst('boltzmann');     % Bolzmann Constant [J/K]
 e = 1.602176634e-19;
 eps_0 = 8.854187817620389e-12; 
 m_e = 9.1093837015e-31;
-m_i = 1.67262192369e-27;
+%m_i = 1.67262192369e-27;                    % 
 mu_0 = 1.2566370614359173e-06;
 hbar = 1.0546e-34;
 
 
    
-[Te, ne_0,n_n, Z] = deal(plasma_properties{:});
+[Te, ne_0,n_n, Z, m_i] = deal(plasma_properties{:});
     nb=ne_0;
     [T_wka, T_wkc, E_i, A_G, h, L, W, E_Fin] = deal(design_parameters{:});
 
@@ -29,11 +38,10 @@ else
 end
     
     
-A_G =A_G*F_TEE;%      % Material Constant
+A_G =A_G*F_TEE;%      % Material Constant for shottkey equation
 
-%% Initial Guesses for electrode emissions, Wall cleaelectric field
-varphi_sf = 0.5*log(2*pi*m_e/m_i); % Guess for sheath potential drop assuming Ti=0
-
+%% Initial Guesses for Wall Electric field
+varphi_sf = 0.5*log(2*pi*m_e/m_i); % Guess for sheath potential drop of a floating wall assuming Ti=0
 
 VA_guess= log(2*exp(varphi_sf)/(1+exp(e*(phi_C-phi_A)/Te)));%varphi_sf%%+2
 VC_guess=  varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))%varphi_sf-10%VA_guess%-4% ( phi_C-(phi_A+varphi_sf))/2;%
@@ -43,7 +51,7 @@ VC_guess=  varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))
 %% Function solver
 
 % Iterating over different values for wall electric field
-    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, E_i, E_F, A_G, W);
+    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, m_i, E_i, E_F, A_G, W);
 
     [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C);
 
@@ -83,12 +91,12 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian,
 end
 
 %% Initial state Guessor
-function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, E_i, E_F, A_G, W)
-global imeq m_i e ;
+function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, m_i, E_i, E_F, A_G, W)
+global imeq e ;
 import transversemodel.subfunctions.*;
 
-[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, E_i,E_F, A_G, W);
-[EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, E_i, E_F, A_G, W);
+[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, m_i, E_i,E_F, A_G, W);
+[EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, m_i, E_i, E_F, A_G, W);
 
 ue_guess = (gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e)  - gemC_guess +ge_bolz(ne_0, Te, -VC_guess*Te/e))/2/ne_0;
 %(ge_bolz(ne_0, Te, -VC_guess*Te/e) - gemC_guess)/ne_0-sqrt(Te/m_i)
@@ -102,8 +110,8 @@ end
 
 end
 
-function [E_guess, gem_guess] = wall_guess(T_wk, varphi_sf, Te, ne_0, E_i, E_Fin, A_G, W)
-global m_i F_SEE F_FEE;
+function [E_guess, gem_guess] = wall_guess(T_wk, varphi_sf, Te, ne_0, m_i, E_i, E_Fin, A_G, W)
+global F_SEE F_FEE;
 import transversemodel.subfunctions.*;
 if F_SEE
     ge_SEE = SEE(ne_0*sqrt(Te/m_i), E_i, W);

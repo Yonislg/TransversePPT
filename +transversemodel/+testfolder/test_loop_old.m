@@ -7,7 +7,7 @@ import transversemodel.subfunctions.*;
 import  transversemodel.main.*;
 
 %Physical constants
-global k e eps_0 hbar m_e m_i mu_0 u_ze imeq F_SEE F_FEE F_TEE;
+global k e eps_0 hbar m_e mu_0 u_ze imeq F_SEE F_FEE F_TEE;
 
 k = physconst('boltzmann');     % Bolzmann Constant [J/K]
 e = 1.602176634e-19;
@@ -203,7 +203,7 @@ for p=1
     ui0 = sqrt(Te/m_i);      % Ion sheath boundary velocity
     
 
-    plasma_properties = {Te, ne_0, ui0};
+    plasma_properties = {Te, ne_0,n_n,Z, m_i};
     design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
     
     [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);
