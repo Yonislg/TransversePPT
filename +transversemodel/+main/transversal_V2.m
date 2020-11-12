@@ -10,7 +10,7 @@ k = physconst('boltzmann');     % Bolzmann Constant [J/K]
 e = 1.602176634e-19;
 eps_0 = 8.854187817620389e-12; 
 m_e = 9.1093837015e-31;
-m_i = 1.67262192369e-27*17;
+m_i = 1.67262192369e-27;%*17;
 mu_0 = 1.2566370614359173e-06;
 hbar = 1.0546e-34; % J*s
 
@@ -30,7 +30,7 @@ else
     fprintf('\nSecondary electron emmissions are not included');
 end
 
-F_TEE=1; %Include SEE 
+F_TEE=0; %Include SEE 
 if F_TEE
     fprintf('\nThermal electron emmissions are included');
 else
@@ -46,37 +46,45 @@ end
         
 %u_ze = 10000;
 
-W= 4.4; % Workfunction of copper (4.4) in eV according to Frid
-
 %Electrode temepratures
 T_wk = 700;           % Electrode temperature (Dummy) [k]
-T_wka = 900;          % Anode temperture [k]
+T_wka = 700;          % Anode temperture [k]
 T_wkc = 600;          % Cathode temperture [k]
 
+% Electrode dimension
+h = 0.05;               % Distance between electrodes
+L = 0.08;               % Length of electrodes
+
+% Material properties
+W= 4.4;                 % Workfunction of copper (4.4) in eV according to Frid
 A_G = 80*10^4*F_TEE%0;%      % Material Constant
-%ne_0 =            
-nb = 2.7*10^22;              % bulk electron density
-ne_0 =nb/2;             % Electron density at sheath edge [m^-3]
-Te = 3*e;               % Electron Temperature in joules (not eV!)
-ui0 =sqrt(Te/m_i);      % Ion sheath boundary velocity
 E_i = 13.6;             % Ionization energy of hydrogen in electronvolt [eV]
 E_F = 7;                % Fermi energy [eV]
 %7.7;                   % Ionization energy of copper in electronvolt
 
-phi_A =  1200;          % Anode potential 
+% External potential
+phi_A =  1000;          % Anode potential 
 phi_C = 0;%0;           % Cathode potenital
-h = 0.01;               % Distance between electrodes
-L = 0.08;               % Length of electrodes
-Z = 2;                  % ionisation number
-a_iz = 1;              % ionisation degree
+
+% Electron properties            
+nb = 10^22;              % bulk electron density
+Te = 1*e;               % Electron Temperature in joules (not eV!)
+
+ne_0 = nb;             % Electron density at sheath edge [m^-3]
+
+%ui0 =sqrt(Te/m_i);      % Ion sheath boundary velocity
 
 % neutral density and ion density
+Z = 1;                  % ionisation number
+a_iz = 1;              % ionisation degree
 n_n = (1-a_iz)/a_iz*ne_0;
-n_i = ne_0/Z;
-gi = n_i*sqrt(Te/m_i); % Ion sheath flux
+%ni_b = nb/Z;
+ni_0 = ne_0/Z;
+
+%gi = ni_0*sqrt(Te/m_i); % Ion sheath flux
 
 
-plasma_properties = {Te, ne_0, n_n, Z, ui0};
+plasma_properties = {Te, ne_0, nb, n_n, Z, m_i};
 design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
 
 %% Initial Guesses for electrode emissions, Wall cleaelectric field
@@ -98,7 +106,7 @@ VC_guess=  varphi_sf-C_guess;
 %% Function solver
 
 % Iterating over different values for wall electric field
-    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, m_i, E_i, E_F, A_G, W);
+    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
     [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C)
 
@@ -138,12 +146,12 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian]
 end
 
 %% Initial state Guessor
-function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, m_i, E_i, E_F, A_G, W)
+function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W)
 global imeq e ;
 import transversemodel.subfunctions.*;
 
-[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, m_i, E_i,E_F, A_G, W);
-[EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, m_i, E_i, E_F, A_G, W);
+[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, ni_0, m_i, E_i,E_F, A_G, W);
+[EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
 ue_guess = (gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e)  - gemC_guess +ge_bolz(ne_0, Te, -VC_guess*Te/e))/2/ne_0;
 %(ge_bolz(ne_0, Te, -VC_guess*Te/e) - gemC_guess)/ne_0-sqrt(Te/m_i)
@@ -157,11 +165,11 @@ end
 
 end
 
-function [E_guess, gem_guess] = wall_guess(T_wk, varphi_sf, Te, ne_0, m_i, E_i, E_Fin, A_G, W)
+function [E_guess, gem_guess] = wall_guess(T_wk, varphi_sf, Te, ne_0, ni_0, m_i, E_i, E_Fin, A_G, W)
 global F_SEE F_FEE;
 import transversemodel.subfunctions.*;
 if F_SEE
-    ge_SEE = SEE(ne_0*sqrt(Te/m_i), E_i, W);
+    ge_SEE = SEE(ni_0*sqrt(Te/m_i), E_i, W);
 else 
     ge_SEE = 0;
 end

@@ -64,10 +64,10 @@ n_iter = 20;
 
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
 r_T_wkc = [500 600 700 800];                        % Cathode temperture [k]
-r_ne_0 = linspace(10^20,9*10^22, n_iter);           % Electron density  [m^-3]  2*10^22 3*10^22 4*10^22 
+r_nb = linspace(10^20,9*10^22, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  [10 100 1000];                           % Anode potential 
-r_h = [0.01 0.02 0.05];                             % Distance between electrodes
+r_h = [0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
 r_C_guess = [0 5 10 30];
 
 % Ionisation parameters 
@@ -143,13 +143,13 @@ hold on
 
 
 for p=1
-    for j=1:n_iter
+    for j=n_iter
         if j==1
             style3='--';
         elseif j==2
             style3=':';
         end
-        for i=1:T_iter
+        for i=2
             for m= 2
                 for n=3   
                     for v=3
@@ -157,8 +157,8 @@ for p=1
     
     T_wka = r_T_wka(n); 
     T_wkc = r_T_wkc(m);
-    ne_0 = r_ne_0(j);
-    n_n = (1-a_iz)/a_iz*ne_0;
+    nb = r_nb(j);       % electron bulk density
+    %n_n = (1-a_iz)/a_iz*ne_0;
     phi_A = r_phi_A(v);
     h = r_h(3);
     C_guess = r_C_guess(p);
@@ -166,7 +166,7 @@ for p=1
     %ui0 = sqrt(Te/m_i);      % Ion sheath boundary velocity
     
 
-    plasma_properties = {Te, ne_0,n_n,Z, m_i};
+    plasma_properties = {Te, nb,a_iz,Z, m_i};
     design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
     
     [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);
@@ -174,12 +174,11 @@ for p=1
     if exitflag>0&&isreal(x)
         exitflag;
         ctr=ctr+1;
-        InpuTable(ctr,:) = {ne_0, Te/e,phi_A, T_wkc, T_wka, h};
+        InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h};
         IniTable(ctr,:) = array2table([initial_state phi_A-initial_state(2) phi_C-initial_state(1)]);
         OutpuTable(ctr,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D};
         ExiTable(ctr,:) = array2table([exitflag fx]);
                
-        
     end
                     end
                 end
@@ -188,16 +187,16 @@ for p=1
         % plot all other variables
         % Electron bulk velocity
         figure(1)
-        plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),-OutpuTable.('electron bulk velocity')(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', ne_0),'color',cc(j,:))
+        plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),-OutpuTable.('electron bulk velocity')(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
         
         figure(2)
-        plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),-OutpuTable.('electron bulk velocity')(strt:ctr).*ne_0*e,style3,'DisplayName', sprintf('n = %.1e m^{-3}', ne_0),'color',cc(j,:))
+        plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),-OutpuTable.('electron bulk velocity')(strt:ctr).*nb*e,style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
         
         figure(3)
-        plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),OutpuTable.("Cathode potential")(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', ne_0),'color',cc(j,:))
+        plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),OutpuTable.("Cathode potential")(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
         
         figure(4)
-        plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),OutpuTable.("Anode potential")(strt:ctr)-OutpuTable.("Cathode potential")(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', ne_0),'color',cc(j,:))
+        plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),OutpuTable.("Anode potential")(strt:ctr)-OutpuTable.("Cathode potential")(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
 
         strt = ctr+1;
     end
@@ -211,29 +210,29 @@ ExiTable(ctr+1:end,:)=[];
 
 %% Make Matrices
 
-OuTe = Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),InpuTable.('Electrode temperature [eV]'));
-CatDrop = Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Cathode sheath potential drop'));
-AnoDrop = Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Anode sheath potential drop'));
-CatEm = Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Cathode emissions'));
-AnoEm = Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Anode emissions'));
-CatEfield = Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Cathode E-field'));
-AnoEfield = Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Anode E-field'));
-Bulkvel =  Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('electron bulk velocity'));
-CatPot  =  Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Cathode potential'));
-AnoPot  =  Tab2Mat(r_ne_0,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Anode potential'));
+OuTe = Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),InpuTable.('Electrode temperature [eV]'));
+CatDrop = Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Cathode sheath potential drop'));
+AnoDrop = Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Anode sheath potential drop'));
+CatEm = Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Cathode emissions'));
+AnoEm = Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Anode emissions'));
+CatEfield = Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Cathode E-field'));
+AnoEfield = Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Anode E-field'));
+Bulkvel =  Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('electron bulk velocity'));
+CatPot  =  Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Cathode potential'));
+AnoPot  =  Tab2Mat(r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]'),OutpuTable.('Anode potential'));
 ResMat  =  AnoPot-CatPot;
 
 h =  findobj('type','figure');
 S = 4;%= length(h);
 c2=jet(T_iter);
     figure(S+1)
-    hrm = plot(r_ne_0,ResMat);
+    hrm = plot(r_nb,ResMat);
     set(hrm, {'color'},num2cell(c2,2))
     figure(S+2)
-    hcp = plot(r_ne_0,CatPot);
+    hcp = plot(r_nb,CatPot);
     set(hcp, {'color'},num2cell(c2,2))
     figure(S+3)
-    hce = plot(r_ne_0,CatEm);
+    hce = plot(r_nb,CatEm);
     set(hce, {'color'},num2cell(c2,2))
 
 %%
@@ -246,18 +245,18 @@ figure(6)
 title('Cahtode Potential Drop')
 xlabel('Density [m^{-3}]')
 ylabel('Potentail Drop [V]')
-
-figure(7)
-title('Cathode Emissions')
-xlabel('Density [m^{-3}]')
-ylabel('Electron flux [m^{-3}/s]')
+% 
+% figure(7)
+% title('Cathode Emissions')
+% xlabel('Density [m^{-3}]')
+% ylabel('Electron flux [m^{-3}/s]')
 
 
 
 %% Plot for Temps
 Temps = cellfun(@(c) sprintf('%0.1e',c),num2cell([r_Te(1)/e r_Te(T_iter/10:T_iter/10:T_iter)/e]),'UniformOutput',false); % make robost to change
 
-for i = 5:7
+for i = 5:6
     figure(i)
     colormap(c2)
     hc = colorbar;
@@ -267,7 +266,7 @@ for i = 5:7
 end
 
 %% Colorising figures
-dens =cellfun(@(c) sprintf('%0.1e',c),num2cell([r_ne_0(1) r_ne_0(n_iter/10:n_iter/10:n_iter)]),'UniformOutput',false);
+dens =cellfun(@(c) sprintf('%0.1e',c),num2cell([r_nb(1) r_nb(n_iter/10:n_iter/10:n_iter)]),'UniformOutput',false);
 
 for i = 1:4
     figure(i)

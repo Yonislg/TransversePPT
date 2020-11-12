@@ -27,9 +27,17 @@ hbar = 1.0546e-34;
 
 
    
-[Te, ne_0,n_n, Z, m_i] = deal(plasma_properties{:});
-    nb=ne_0;
+    [Te, nb, a_iz, Z, m_i] = deal(plasma_properties{:});
+    ne_0=nb;
     [T_wka, T_wkc, E_i, A_G, h, L, W, E_Fin] = deal(design_parameters{:});
+
+    % neutral density and ion density
+    n_n = (1-a_iz)/a_iz*ne_0;
+    %ni_b = nb/Z;
+    ni_0 = ne_0/Z;
+    
+    plasma_properties = {Te, ne_0, nb, n_n, Z, m_i};
+   
 
 if F_FEE
     E_F= E_Fin;
@@ -51,7 +59,7 @@ VC_guess=  varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))
 %% Function solver
 
 % Iterating over different values for wall electric field
-    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, m_i, E_i, E_F, A_G, W);
+    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
     [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C);
 
@@ -91,12 +99,12 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian,
 end
 
 %% Initial state Guessor
-function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, m_i, E_i, E_F, A_G, W)
+function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W)
 global imeq e ;
 import transversemodel.subfunctions.*;
 
-[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, m_i, E_i,E_F, A_G, W);
-[EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, m_i, E_i, E_F, A_G, W);
+[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, ni_0, m_i, E_i,E_F, A_G, W);
+[EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
 ue_guess = (gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e)  - gemC_guess +ge_bolz(ne_0, Te, -VC_guess*Te/e))/2/ne_0;
 %(ge_bolz(ne_0, Te, -VC_guess*Te/e) - gemC_guess)/ne_0-sqrt(Te/m_i)
@@ -110,11 +118,11 @@ end
 
 end
 
-function [E_guess, gem_guess] = wall_guess(T_wk, varphi_sf, Te, ne_0, m_i, E_i, E_Fin, A_G, W)
+function [E_guess, gem_guess] = wall_guess(T_wk, varphi_sf, Te, ne_0, ni_0, m_i, E_i, E_Fin, A_G, W)
 global F_SEE F_FEE;
 import transversemodel.subfunctions.*;
 if F_SEE
-    ge_SEE = SEE(ne_0*sqrt(Te/m_i), E_i, W);
+    ge_SEE = SEE(ni_0*sqrt(Te/m_i), E_i, W);
 else 
     ge_SEE = 0;
 end
