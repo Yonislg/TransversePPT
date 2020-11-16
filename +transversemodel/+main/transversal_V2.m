@@ -52,7 +52,7 @@ T_wka = 700;          % Anode temperture [k]
 T_wkc = 600;          % Cathode temperture [k]
 
 % Electrode dimension
-h = 0.05;               % Distance between electrodes
+h = 0.012;               % Distance between electrodes
 L = 0.08;               % Length of electrodes
 
 % Material properties
