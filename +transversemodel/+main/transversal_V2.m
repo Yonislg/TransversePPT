@@ -84,6 +84,7 @@ ni_0 = ne_0/Z;
 %gi = ni_0*sqrt(Te/m_i); % Ion sheath flux
 
 
+
 plasma_properties = {Te, ne_0, nb, n_n, Z, m_i};
 design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
 
