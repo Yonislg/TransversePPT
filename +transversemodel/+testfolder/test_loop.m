@@ -142,44 +142,46 @@ height=490;
 % hold on
 
 
-for p=1
-    for j=1:n_iter
-        if j==1
-            style3='--';
+for p = 1
+    for j = 1:n_iter
+        if j == 1
+            style3 = '--';
         else %if j==2
-            style3=':';
+            style3 = ':';
         end
-        for i=1:6
-            for m= 2
-                for n=3   
-                    for v=3
-    Te=r_Te(2);
-    
-    T_wka = r_T_wka(n); 
-    T_wkc = r_T_wkc(m);
-    nb = r_nb(j);       % electron bulk density
-    %n_n = (1-a_iz)/a_iz*ne_0;
-    phi_A = r_phi_A(v);
-    h = r_h(i);
-    C_guess = r_C_guess(p);
-    
-    %ui0 = sqrt(Te/m_i);      % Ion sheath boundary velocity
-    
+        for i = 1:6
+            for c = 2
+                for a = 3   
+                    for v = 3
+                        for te = 2
+                            Te=r_Te(2);
 
-    plasma_properties = {Te, nb,a_iz,Z, m_i};
-    design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
-    
-    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);
+                            T_wka = r_T_wka(a); 
+                            T_wkc = r_T_wkc(c);
+                            nb = r_nb(j);       % electron bulk density
+                            %n_n = (1-a_iz)/a_iz*ne_0;
+                            phi_A = r_phi_A(v);
+                            h = r_h(i);
+                            C_guess = r_C_guess(p);
 
-    if exitflag>0&&isreal(x)
-        exitflag;
-        ctr=ctr+1;
-        InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h};
-        IniTable(ctr,:) = array2table([initial_state phi_A-initial_state(2) phi_C-initial_state(1)]);
-        OutpuTable(ctr,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D};
-        ExiTable(ctr,:) = array2table([exitflag fx]);
-               
-    end
+                            %ui0 = sqrt(Te/m_i);      % Ion sheath boundary velocity
+
+
+                            plasma_properties = {Te, nb,a_iz,Z, m_i};
+                            design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
+
+                            [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);
+
+                            if exitflag>0&&isreal(x)
+                                exitflag;
+                                ctr=ctr+1;
+                                InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h};
+                                IniTable(ctr,:) = array2table([initial_state phi_A-initial_state(2) phi_C-initial_state(1)]);
+                                OutpuTable(ctr,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D};
+                                ExiTable(ctr,:) = array2table([exitflag fx]);
+
+                            end
+                        end
                     end
                 end
             end
@@ -211,23 +213,24 @@ ExiTable(ctr+1:end,:)=[];
 %% Make Matrices
 
 %matx = [r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]')]; 
-matx = {r_nb,r_h,InpuTable.('Electron density'),InpuTable.('Electrode distance')}; 
+inmat1 = InpuTable.('Electron density'); 
+inmat2 = InpuTable.('Electrode distance');
 
-OuTe = Tab2Mat(matx{1},matx{2},matx{3},matx{4}, InpuTable.('Electrode temperature [eV]'));
-CatDrop = Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('Cathode sheath potential drop'));
-AnoDrop = Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('Anode sheath potential drop'));
-CatEm = Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('Cathode emissions'));
-AnoEm = Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('Anode emissions'));
-CatEfield = Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('Cathode E-field'));
-AnoEfield = Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('Anode E-field'));
-Bulkvel =  Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('electron bulk velocity'));
-CatPot  =  Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('Cathode potential'));
-AnoPot  =  Tab2Mat(matx{1},matx{2},matx{3},matx{4}, OutpuTable.('Anode potential'));
+OuTe = Tab2Mat(inmat1, inmat2, InpuTable.('Electrode temperature [eV]'));
+CatDrop = Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode sheath potential drop'));
+AnoDrop = Tab2Mat(inmat1, inmat2, OutpuTable.('Anode sheath potential drop'));
+CatEm = Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode emissions'));
+AnoEm = Tab2Mat(inmat1, inmat2, OutpuTable.('Anode emissions'));
+CatEfield = Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode E-field'));
+AnoEfield = Tab2Mat(inmat1, inmat2, OutpuTable.('Anode E-field'));
+Bulkvel =  Tab2Mat(inmat1, inmat2, OutpuTable.('electron bulk velocity'));
+CatPot  =  Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode potential'));
+AnoPot  =  Tab2Mat(inmat1, inmat2, OutpuTable.('Anode potential'));
 ResMat  =  AnoPot-CatPot;
 
 h =  findobj('type','figure');
 S = 0;%= length(h);
-c2=jet(6);
+c2=jet(length(unique(inmat2)));
     figure(S+1)
     hrm = plot(r_nb,ResMat);
     set(hrm, {'color'},num2cell(c2,2))
@@ -305,7 +308,7 @@ eta_n =m_e*10^(-20)*sqrt(Te*e*m_e)/e^2;
 
 
 %% Matrix Maker
-function OutMat = Tab2Mat(vec1,vec2,InCol1,InCol2,ProCol)
+function OutMat = Tab2Mat(InCol1,InCol2,ProCol)
     vec1=unique(InCol1);
     vec2=unique(InCol2);
     Outmat1 = zeros(length(vec1),length(vec2));
