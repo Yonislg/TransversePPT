@@ -64,7 +64,14 @@ n_iter = 25;
 
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
 r_T_wkc = [500 600 700 800];                        % Cathode temperture [k]
-r_nb = linspace(10^20,2*10^23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
+
+LOGDENS = 0; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
+
+if LOGDENS
+    r_nb = logspace(10^20,2*10^23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
+else
+    r_nb = linspace(10^20,2*10^23, n_iter);
+end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  [10 100 1000];                           % Anode potential 
 r_h = [0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
@@ -223,6 +230,7 @@ CatPot  =  Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode potential'));
 AnoPot  =  Tab2Mat(inmat1, inmat2, OutpuTable.('Anode potential'));
 ResMat  =  AnoPot-CatPot;
 
+%% Plot with Temperature on the x-axis and Temperature as color coding
 figure(1)
 %plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),-OutpuTable.('electron bulk velocity')(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
 hbv = plot(r_Te/e,-Bulkvel');
@@ -245,23 +253,28 @@ hres = plot(r_Te/e,ResMat');
 
 
 
-dens =cellfun(@(c) sprintf('%0.1e',c),num2cell(r_nb),'UniformOutput',false);
+%dens =cellfun(@(c) sprintf('%0.1e',c),num2cell(r_nb),'UniformOutput',false);
+if LOGDENS
+    dens = cellfun(@(c) sprintf('%0.1e',c),num2cell(logspace(r_nb(1),r_nb(T_iter),11)),'UniformOutput',false)
+else
+    dens = cellfun(@(c) sprintf('%0.1e',c),num2cell(linspace(r_nb(1),r_nb(T_iter),11)),'UniformOutput',false)
+end
+
 
 for i = 1:4
     figure(i)
     colormap(cc)
     hc= colorbar;
-    set(hc,'Ticklabels',dens,'limit',[0 1],'Ticks',linspace(0,1,n_iter))
+    set(hc,'Ticklabels',dens,'limit',[0 1],'Ticks',linspace(0,1,11))
     set(hc.Label,'String','Density in m^{-3}')
-
-    
-    
 end
 
 
+%% Plot for Density on the x-axis
+
 
 h =  findobj('type','figure');
-S = length(h);
+S = 4%length(h);
 c2=jet(length(unique(inmat2)));
     figure(S+1)
     hrm = plot(r_nb,ResMat);
@@ -270,10 +283,13 @@ c2=jet(length(unique(inmat2)));
     hcp = plot(r_nb,CatPot);
     set(hcp, {'color'},num2cell(c2,2))
     figure(S+3)
-    hce = plot(r_nb,CatEm);
+    hce = plot(r_nb,-Bulkvel);
+    set(hce, {'color'},num2cell(c2,2))
+    figure(S+4)
+    hce = plot(r_nb,-Bulkvel.*r_nb'*e);
     set(hce, {'color'},num2cell(c2,2))
 
-%%
+
 figure(S+1)
 title('Bulk resistance')
 xlabel('Density [m^{-3}]')
@@ -285,18 +301,26 @@ xlabel('Density [m^{-3}]')
 ylabel('Potentail Drop [V]')
 % 
 figure(S+3)
-title('Cathode Emissions')
+%title('Cathode Emissions')
+title('Electron Bulk Velocity')
 xlabel('Density [m^{-3}]')
-ylabel('Electron flux [m^{-3}/s]')
+ylabel('U_xe [m/s]')
+%ylabel('Electron flux [m^{-3}/s]')
+
+figure(S+4)
+title('Electron Current')
+xlabel('Density [m^{-3}]')
+ylabel('I [A/m^2]')
 
 
 
-%% Plot for Temps
+% Coroize temperaturs
+
 %Temps = cellfun(@(c) sprintf('%0.1e',c),num2cell([r_Te(1)/e r_Te(T_iter/10:T_iter/10:T_iter)/e]),'UniformOutput',false); % make robost to change
 
-Temps = cellfun(@(c) sprintf('%0.1e',c),num2cell([r_Te(1)/e r_Te(T_iter/10:T_iter/10:T_iter)/e]),'UniformOutput',false); % make robost to change
+Temps = cellfun(@(c) sprintf('%0.1e',c),num2cell(linspace(r_Te(1)/e,r_Te(T_iter)/e,11)),'UniformOutput',false); % 
 
-for i = S+1:S+2
+for i = S+1:S+4
     figure(i)
     colormap(c2)
     hc = colorbar;
@@ -305,17 +329,48 @@ for i = S+1:S+2
     
 end
 
-%% Colorising figures
-dens =cellfun(@(c) sprintf('%0.1e',c),num2cell([r_nb(1) r_nb(n_iter/10:n_iter/10:n_iter)]),'UniformOutput',false);
 
-for i = 1:4
-    figure(i)
-    colormap(cc)
-    hc = colorbar;
-    set(hc,'Ticklabels',dens,'limit',[0 1],'Ticks',linspace(0,1,11))
-    set(hc.Label,'String','Density in m^{-3}')
-    
-end
+% %% 3D plot to check
+% S = 8;
+% [X,Y] = meshgrid(r_nb, r_Te/e);
+% 
+%     figure(S+1)
+%     surf(X,Y,ResMat');
+% 
+%     figure(S+2)
+%     surf(X,Y,CatPot');
+% 
+%     figure(S+3)
+%     surf(X,Y,-Bulkvel');
+% 
+%     figure(S+4)
+%     surf(X,Y,(-Bulkvel.*r_nb'*e)');
+% 
+% 
+% 
+% 
+% figure(S+1)
+% title('Bulk resistance')
+% xlabel('Density [m^{-3}]')
+% ylabel('Electron temperature [eV]')
+% 
+% figure(S+2)
+% title('Cahtode Potential Drop')
+% xlabel('Density [m^{-3}]')
+% ylabel('Electron temperature [eV]')
+% % 
+% figure(S+3)
+% title('Electron Bulk Velocity')
+% xlabel('Density [m^{-3}]')
+% ylabel('Electron temperature [eV]')
+% 
+% figure(S+4)
+% title('Electron Current')
+% xlabel('Density [m^{-3}]')
+% ylabel('Electron temperature [eV]')
+% 
+% 
+
 
 
 %% figures on resistivity
