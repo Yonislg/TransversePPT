@@ -2,7 +2,7 @@
 % This code prepares inputs for the total_current.m by making an initial
 % estimates, it than processes the output.
 % This version (V3) can be called upon by other scripts that determine
-% inputs and outputs, which is preferable when making a large amount of iterations over wide ragnes.
+% inputs and outputs, which is preferable when making a large amount of iterations over wide ranges.
 % The other version (V2) is integrated in a testing script which is
 % benefificial when making quick simple calculations.
 % Created 08/04/2020 by Yonis le Grand
@@ -21,7 +21,7 @@ k = physconst('boltzmann');     % Bolzmann Constant [J/K]
 e = 1.602176634e-19;
 eps_0 = 8.854187817620389e-12; 
 m_e = 9.1093837015e-31;
-%m_i = 1.67262192369e-27;                    % 
+%m_i = 1.67262192369e-27;               
 mu_0 = 1.2566370614359173e-06;
 hbar = 1.0546e-34;
 
