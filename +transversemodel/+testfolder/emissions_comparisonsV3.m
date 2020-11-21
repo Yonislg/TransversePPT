@@ -27,36 +27,43 @@ E_i = [13.6 11.3 24.4 47.9 17.4 35 62.7] ;                    % Ionization energ
 iter= 200;
 Te = 3*e;
 %n =  linspace(10^5,3*10^23,iter);       % Electron density  [m^-3]
-n =  logspace(1,25,iter);       % Electron density  [m^-3]
+n =  logspace(1,25,iter);                % Electron density  [m^-3]
 varphi = linspace(-1,-2000,iter);
-[N,V] = meshgrid(n,varphi);
+[N,V] = meshgrid(n,varphi)
 
 
 %% Comparison for Electric field
 %E_w1 = linspace(0,40)*10^8; % Electric field
 
 % GET Inspiration from wall field!
-for i = 1:6
-m_i = pre(1)*1.67262192369e-27;
+for i = 3:6
+m_i = pre(i)*1.67262192369e-27;
 
-[SEE_o, FEE_o, TEE_o, E] = iterfield(Twk, V, N, Te, A_G, E_i(i), W, E_F, CorF,m_i);
+[SEE_1, FEE_1, TEE_1, E] = iterfield(Twk, V, N, Te, A_G, E_i(i), W, E_F, CorF,m_i);
+
+SEE_o(i,:) = min(SEE_1);
+FEE_o(i,:) = max(TEE_1);
+TEE_o(i,:) = max(FEE_1);
+E_o(i,:) = max(E);%,[],1);
+
+end
 %% Plot
 figure(1)
-hold on
-loglog(n,max(E'))
-title("Density and Electric field")    
+loglog(n,E_o)
+title("Density and Electric field")  
+
 figure(2)
 hold on
 %loglog(n,SEE_o,'-',n,TEE_o,':',n,FEE_o,'--')% or use loglog
-loglog(n, min(SEE_o),'-',n,max(TEE_o),':',n,max(FEE_o),'--')
-ulm = ceil(log10(max(max([TEE_o,FEE_o,SEE_o]))));   % To set a boundary of interest for the plot
-%ylim([10^(-10) 10^(ulm+5)])
+plot(n, SEE_o,'-',n,TEE_o,':',n,FEE_o,'--')
+%ulm = ceil(log10(max(max([TEE_o,FEE_o,SEE_o]))));   % To set a boundary of interest for the plot
+%%ylim([10^(-10) 10^(ulm+5)])
 title(sprintf('Maximum Electron emissions (T_e = %u eV)',Te/e))
 xlabel('Density [m^{-3}]')
 ylabel('Current density [A/m^2]')
-legend("SEE","TEE","FEE")
+%legend("SEE","TEE","FEE")
 
-end
+
 %% Required functions
 
 function [SEE_o, FEE_o, TEE_o, E] = iterfield(Twk, varphi, n, Te, A_G, E_i, W, E_F, CorF, m_i)
