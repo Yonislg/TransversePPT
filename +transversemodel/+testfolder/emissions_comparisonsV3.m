@@ -24,10 +24,10 @@ E_i = 13.6;                    % Ionization energy of hydrogen in electronvolt [
 
 
 % Main iterables
-iter= 900;
-Te = 3*e;
+iter= 200;
+Te = 1*e;
 %n =  linspace(10^5,3*10^23,iter);       % Electron density  [m^-3]
-n =  logspace(6,24,iter);       % Electron density  [m^-3]
+n =  logspace(6,25,iter);       % Electron density  [m^-3]
 varphi = linspace(-1,-2000,iter);
 [N,V] = meshgrid(n,varphi);
 
@@ -44,7 +44,7 @@ plot(n,E')
 title("Density and Electric field")    
 figure(2)
 %semilogy(n,SEE_o,'-',n,TEE_o,':',n,FEE_o,'--')
-semilogy(n, min(SEE_o),'-',n,max(TEE_o),':',n,max(FEE_o),'--')
+loglog(n, min(SEE_o),'-',n,max(TEE_o),':',n,max(FEE_o),'--')
 ulm = ceil(log10(max(max([TEE_o,FEE_o,SEE_o]))));   % To set a boundary of interest for the plot
 ylim([10^(-20) 10^(ulm+5)])
 title(sprintf('Maximum Electron emissions (T_e = %u eV)',Te/e))
@@ -63,10 +63,14 @@ import transversemodel.subfunctions.*;
     ui0 = sqrt(Te/m_i);             % Ion sheath boundary velocity
     gi = n.*ui0;                    % Ion sheath flux
     
+    E_w = wall_e_field(Twk, varphi, 0, n, Te);
+    
+    ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
+    
     % Iterating over the E_w field
-    E_w = wall_e_field(Twk, varphi, SEE(gi, E_i, W), n, Te);
+    E_w = wall_e_field(Twk, varphi, ge, n, Te);
     %E_w(imag(E_w)~=0) = nan;
-    ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF)
+    ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
     geT = schottky(Twk, W, E_w, A_G);
     geS = SEE(gi, E_i, W);
     geF = FEE(W,E_F, E_w, CorF);

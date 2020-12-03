@@ -59,8 +59,8 @@ L = 0.08;
 A_G = 80*10^4;          % Material constant for Schottkey equation
 
 % parameter ranges:
-T_iter= 10;
-n_iter = 10;
+T_iter= 25;
+n_iter = 25;
 
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
 r_T_wkc = [500 600 700 800];                        % Cathode temperture [k]
@@ -119,7 +119,7 @@ for j = 1:n_iter
         nb = r_nb(j);       % electron bulk density
         %n_n = (1-a_iz)/a_iz*ne_0;
         phi_A = r_phi_A(3);
-        h = r_h(2);
+        h = r_h(6);
         C_guess = r_C_guess(1);
         
         plasma_properties = {Te, nb,a_iz,Z, m_i};
@@ -276,45 +276,46 @@ for i = S+1:S+4
 end
 
 
-% %% 3D plot to check
-% S = 8;
-% [X,Y] = meshgrid(r_nb, r_Te/e);
+%% 3D plot to check
+S = 8;
+[X,Y] = meshgrid(invec1, invec2);
+C = X.*(Y*e/m_i).^0.5;
+
+    figure(S+1)
+    surf(X,Y,NT.ResMat',C);
+
+    figure(S+2)
+    surf(X,Y,NT.CatPot',C);
+
+    figure(S+3)
+    surf(X,Y,-NT.Bulkvel',C);
+
+    figure(S+4)
+    surf(X,Y,(-NT.Bulkvel.*r_nb'*e)',C);
+
+
+
+
+figure(S+1)
+title('Bulk resistance')
+xlabel('Density [m^{-3}]')
+ylabel('Electron temperature [eV]')
+
+figure(S+2)
+title('Cahtode Potential Drop')
+xlabel('Density [m^{-3}]')
+ylabel('Electron temperature [eV]')
 % 
-%     figure(S+1)
-%     surf(X,Y,ResMat');
-% 
-%     figure(S+2)
-%     surf(X,Y,CatPot');
-% 
-%     figure(S+3)
-%     surf(X,Y,-Bulkvel');
-% 
-%     figure(S+4)
-%     surf(X,Y,(-Bulkvel.*r_nb'*e)');
-% 
-% 
-% 
-% 
-% figure(S+1)
-% title('Bulk resistance')
-% xlabel('Density [m^{-3}]')
-% ylabel('Electron temperature [eV]')
-% 
-% figure(S+2)
-% title('Cahtode Potential Drop')
-% xlabel('Density [m^{-3}]')
-% ylabel('Electron temperature [eV]')
-% % 
-% figure(S+3)
-% title('Electron Bulk Velocity')
-% xlabel('Density [m^{-3}]')
-% ylabel('Electron temperature [eV]')
-% 
-% figure(S+4)
-% title('Electron Current')
-% xlabel('Density [m^{-3}]')
-% ylabel('Electron temperature [eV]')
-% 
+figure(S+3)
+title('Electron Bulk Velocity')
+xlabel('Density [m^{-3}]')
+ylabel('Electron temperature [eV]')
+
+figure(S+4)
+title('Electron Current')
+xlabel('Density [m^{-3}]')
+ylabel('Electron temperature [eV]')
+
 % 
 
 
