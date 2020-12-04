@@ -8,7 +8,7 @@
 % Created 08/04/2020 by Yonis le Grand
 
 
-function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess)%, F_TEE, F_FEE, F_SEE, imeq)
+function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,u_ze, By, C_guess)%, F_TEE, F_FEE, F_SEE, imeq)
 
 %Physical constants
 global k e eps_0 hbar m_e mu_0 F_FEE F_TEE;
@@ -61,13 +61,13 @@ VC_guess=  varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))
 % Iterating over different values for wall electric field
     initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
-    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C);
+    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,By);
 
 %[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian] = currentsolver(plasma_properties,design_parameters, x, phi_A, phi_C);
 end
 
 %% functions
-function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian,exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C)
+function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian,exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,By)
     global e imeq;
     import transversemodel.main.total_current;
     japat=spones( [1     0     1     0     1     0     0;
@@ -80,7 +80,7 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian,
      1     1     0     0     0     0     1]);
     options = optimoptions('fsolve','MaxFunctionEvaluations',5e4,'MaxIterations',1e3,'Display','none','JacobPattern', japat);%,'PlotFcn',@optimplotfirstorderopt);
     Te = plasma_properties{1};
-    fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C);
+    fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C,u_ze,By);
     x0 = initial_state; %[varphi_sf,varphi_sf,gem_guess,gem_guess,E_guess,E_guess,ui0]%[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe];
     [x,fx,exitflag,output,jacobian]  = fsolve(fun,x0,options);
     V_C    = x(1)*Te/e;%*Te

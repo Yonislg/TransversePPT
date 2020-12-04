@@ -59,8 +59,8 @@ L = 0.08;
 A_G = 80*10^4;          % Material constant for Schottkey equation
 
 % parameter ranges:
-T_iter= 25;
-n_iter = 25;
+T_iter= 15;
+n_iter = 15;
 
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
 r_T_wkc = [500 600 700 800];                        % Cathode temperture [k]
@@ -76,6 +76,9 @@ r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in jo
 r_phi_A =  [10 100 1000];                           % Anode potential 
 r_h = [0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
 r_C_guess = [0 5 10 30];
+u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
+By = 0;%.1;               % Magnetic field in Tesla
+
 
 % Ionisation parameters 
 a_iz = 0.5;     %ionisation degree
@@ -125,7 +128,7 @@ for j = 1:n_iter
         plasma_properties = {Te, nb,a_iz,Z, m_i};
         design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
         
-        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);
+        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, By, C_guess);
         
         if exitflag>0&&isreal(x)
             exitflag;

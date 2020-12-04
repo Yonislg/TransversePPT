@@ -3,7 +3,7 @@
 clear all
 close all
 %Physical constants
-global k e eps_0 hbar mu_0 m_e u_ze imeq F_SEE F_FEE F_TEE;
+global k e eps_0 hbar mu_0 m_e imeq F_SEE F_FEE F_TEE;
 import transversemodel.subfunctions.*;
 
 k = physconst('boltzmann');     % Bolzmann Constant [J/K]
@@ -44,7 +44,7 @@ else
     fprintf('\nField electron emmissions are not included');
 end
         
-%u_ze = 10000;
+
 
 %Electrode temepratures
 T_wk = 700;           % Electrode temperature (Dummy) [k]
@@ -52,7 +52,7 @@ T_wka = 700;          % Anode temperture [k]
 T_wkc = 600;          % Cathode temperture [k]
 
 % Electrode dimension
-h = 0.012;               % Distance between electrodes
+h = 0.02;               % Distance between electrodes
 L = 0.08;               % Length of electrodes
 
 % Material properties
@@ -73,6 +73,11 @@ Te = 1*e;               % Electron Temperature in joules (not eV!)
 ne_0 = nb;             % Electron density at sheath edge [m^-3]
 
 %ui0 =sqrt(Te/m_i);      % Ion sheath boundary velocity
+
+% Axial inputs
+u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
+By = 0.1;               % Magnetic field in Tesla
+
 
 % neutral density and ion density
 Z = 1;                  % ionisation number
@@ -109,13 +114,13 @@ VC_guess=  varphi_sf-C_guess;
 % Iterating over different values for wall electric field
     initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
-    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C)
+    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C, u_ze, By)
 
 %[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian] = currentsolver(plasma_properties,design_parameters, x, phi_A, phi_C);
 
 
 %% functions
-function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C)
+function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C, u_ze, By)
     global e imeq;
     import transversemodel.main.total_current;
     japat=spones( [1     0     1     0     1     0     0;
@@ -128,7 +133,7 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian]
      1     1     0     0     0     0     1]);
     options = optimoptions('fsolve','MaxFunctionEvaluations',5e4,'MaxIterations',2e3,'Display','iter','JacobPattern', japat);%,'PlotFcn',@optimplotfirstorderopt);
     Te = plasma_properties{1};
-    fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C);
+    fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C,u_ze, By);
     x0 = initial_state %[varphi_sf,varphi_sf,gem_guess,gem_guess,E_guess,E_guess,ui0]%[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe];
     [x,fx,exitflag,output,jacobian]  = fsolve(fun,x0,options)
     V_C    = x(1)*Te/e;%*Te
