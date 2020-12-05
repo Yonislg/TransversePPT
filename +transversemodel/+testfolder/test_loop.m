@@ -75,7 +75,7 @@ end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  [10 100 1000];                           % Anode potential 
 r_h = [0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
-r_C_guess = [0 5 10 30];
+r_C_guess = [0 1 2 5 10 30];
 
 % Ionisation parameters 
 a_iz = 0.5;     %ionisation degree
@@ -95,11 +95,11 @@ sz2= [iter length(OutputVarNames)];
 IniTable = table('Size', sz2, 'VariableTypes',varTypes2, 'VariableNames', OutputVarNames);
 OutpuTable = table('Size', sz2, 'VariableTypes',varTypes2, 'VariableNames', OutputVarNames);
 
-ExitVarNames = {'ExitFlag','Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity'};
-varTypes3=['int8' repmat({'double'},1,length(ExitVarNames)-1)];
-sz3= [iter length(ExitVarNames)];
+% ExitVarNames = {'ExitFlag','Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity'};
+% varTypes3=['int8' repmat({'double'},1,length(ExitVarNames)-1)];
+% sz3= [iter length(ExitVarNames)];
 
-ExiTable=table('Size', sz3, 'VariableTypes',varTypes3, 'VariableNames', ExitVarNames);
+%ExiTable=table('Size', sz3, 'VariableTypes',varTypes3, 'VariableNames', ExitVarNames);
 %%
 ctr = 0;
 strt = 1;
@@ -110,9 +110,17 @@ strt = 1;
 % height=490;
 % set(gcf,'position',[x0,y0,width,height])
 
+time = zeros(n_iter, T_iter);
+exfl = zeros(n_iter, T_iter);
+
+itermat = zeros(n_iter, T_iter);
+funcmat = zeros(n_iter, T_iter);
+
+optmat = zeros(n_iter, T_iter);
 
 for j = 1:n_iter
     for te = 1:T_iter
+        tic
         Te=r_Te(te);
         T_wka = r_T_wka(3);
         T_wkc = r_T_wkc(2);
@@ -125,7 +133,7 @@ for j = 1:n_iter
         plasma_properties = {Te, nb,a_iz,Z, m_i};
         design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
         
-        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);
+        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);
         
         if exitflag>0&&isreal(x)
             exitflag;
@@ -133,16 +141,31 @@ for j = 1:n_iter
             InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h};
             IniTable(ctr,:) = array2table([initial_state phi_A-initial_state(2) phi_C-initial_state(1)]);
             OutpuTable(ctr,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D};
-            ExiTable(ctr,:) = array2table([exitflag fx]);
+            %ExiTable(ctr,:) = array2table([exitflag fx]);
         end
+        
+%         if output.algorithm = 
+%             
+%         elseif
+%             
+           
+        
+        itermat(j,te) = output.iterations;
+        funcmat(j,te) = output.funcCount;
+        optmat(j,te) = output.firstorderopt;
+        
+        exfl(j,te) = exitflag;
+        time(j,te) =  toc;
     end
     strt = ctr+1;
 end
 
+time;
+
 InpuTable(ctr+1:end,:)=[];
 IniTable(ctr+1:end,:)=[];
 OutpuTable(ctr+1:end,:)=[];
-ExiTable(ctr+1:end,:)=[];
+%ExiTable(ctr+1:end,:)=[];
 
 %% Make Matrices
 
@@ -154,41 +177,45 @@ inmat1 = InpuTable.(label_1);
 inmat2 = InpuTable.(label_2);
 invec1 = unique(inmat1);
 invec2 = unique(inmat2);
-
+tic 
 NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable)
-
+toc
 %% Plot with invec2 on the x-axis and color coding representing invec1
 
 % create color scheme
 cc=jet(n_iter);
 
-
-
 figure(1)
+
+set(gcf,'position',[100,20,900,640])
 %plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),-OutpuTable.('electron bulk velocity')(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
+    subplot(2,2,1);
     hbv = plot(invec2,-NT.Bulkvel');
     set(hbv, {'color'},num2cell(cc,2))
     title('Electron Bulk Velocity')
     xlabel(label_2)
     ylabel('U_xe [m/s]')
 
-figure(2)
+%figure(2)
 %plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),-OutpuTable.('electron bulk velocity')(strt:ctr).*nb*e,style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
+    subplot(2,2,2);
     hcu = plot(invec2,(-NT.Bulkvel.*r_nb'*e)');
     set(hcu, {'color'},num2cell(cc,2))
     title('Electron Current')
     xlabel(label_2)
     ylabel('I [A/m^2]')
 
-figure(3)
+%figure(3)
 %plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),OutpuTable.("Cathode potential")(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
+    subplot(2,2,3);
     hcat = plot(invec2,NT.CatPot');
     set(hcat, {'color'},num2cell(cc,2))
     title('Cathode Potential Drop')
     xlabel(label_2)
     ylabel('Potential Difference [V]')
 
-figure(4)
+%figure(4)
+    subplot(2,2,4);
     hres = plot(invec2,NT.ResMat');
     set(hres, {'color'},num2cell(cc,2))
     title('Bulk Potentail Drop')
@@ -208,7 +235,8 @@ end
 
 
 for i = 1:4
-    figure(i)
+    subplot(2, 2, mod(i-1, 4)+1)
+    %figure(i)
     colormap(cc)
     hc= colorbar;
     set(hc,'Ticklabels',tiLabls1,'limit',[0 1],'Ticks',linspace(0,1,11))
@@ -219,44 +247,55 @@ end
 %% Plot with invec1 on the x-axis and color coding representing invec2
 
 
-h =  findobj('type','figure');
-S = 4%length(h);
+%h =  findobj('type','figure');
+%S = 4%length(h);
+figure(2)
+set(gcf,'position',[100,50,900,640])
+
 c2=jet(length(unique(inmat2)));
-    figure(S+1)
+    %figure(S+1)
+    subplot(2,2,1);
     hrm = plot(invec1,NT.ResMat);
     set(hrm, {'color'},num2cell(c2,2))
-    figure(S+2)
+    title('Bulk resistance')
+    xlabel(label_1)
+    ylabel('Potentail Drop [V]')
+
+    
+    %figure(S+2)
+    subplot(2,2,2);
     hcp = plot(invec1,NT.CatPot);
     set(hcp, {'color'},num2cell(c2,2))
-    figure(S+3)
+    title('Cahtode Potential Drop')
+xlabel(label_1)
+ylabel('Potentail Drop [V]')
+
+    subplot(2,2,3);
+    %figure(S+3)
     hce = plot(invec1,-NT.Bulkvel);
     set(hce, {'color'},num2cell(c2,2))
-    figure(S+4)
-    hce = plot(invec1,-NT.Bulkvel.*r_nb'*e);
-    set(hce, {'color'},num2cell(c2,2))
-
-
-figure(S+1)
-title('Bulk resistance')
-xlabel(label_1)
-ylabel('Potentail Drop [V]')
-
-figure(S+2)
-title('Cahtode Potential Drop')
-xlabel(label_1)
-ylabel('Potentail Drop [V]')
-% 
-figure(S+3)
-%title('Cathode Emissions')
 title('Electron Bulk Velocity')
 xlabel(label_1)
 ylabel('U_xe [m/s]')
-%ylabel('Electron flux [m^{-3}/s]')
 
-figure(S+4)
-title('Electron Current')
+    %figure(S+4)
+    subplot(2,2,4);
+    hce = plot(invec1,-NT.Bulkvel.*r_nb'*e);
+    set(hce, {'color'},num2cell(c2,2))
+    title('Electron Current')
 xlabel(label_1)
 ylabel('I [A/m^2]')
+
+
+%figure(S+1)
+
+%figure(S+2)
+% 
+%figure(S+3)
+%title('Cathode Emissions')
+%ylabel('Electron flux [m^{-3}/s]')
+
+%figure(S+4)
 
 
 
@@ -266,8 +305,9 @@ ylabel('I [A/m^2]')
 
 tiLabls2 = cellfun(@(c) sprintf('%0.1e',c),num2cell(linspace(invec2(1),invec2(end),11)),'UniformOutput',false); % 
 
-for i = S+1:S+4
-    figure(i)
+for i = 1:4%S+1:S+4
+    subplot(2, 2, mod(i-1, 4)+1)
+    %figure(i)
     colormap(c2)
     hc = colorbar;
     set(hc,'Ticklabels',tiLabls2,'limit',[0 1],'Ticks',linspace(0,1,11))
@@ -277,48 +317,151 @@ end
 
 
 %% 3D plot to check
-S = 8;
+S = 2;
 [X,Y] = meshgrid(invec1, invec2);
 C = X.*(Y*e/m_i).^0.5;
 
     figure(S+1)
-    surf(X,Y,NT.ResMat',C);
+    set(gcf,'position',[100,20,900,640])
+    subplot(2,2,1);
+    surf(X,Y,NT.ResMat');
+    view(0,90);
+    colorbar
 
-    figure(S+2)
-    surf(X,Y,NT.CatPot',C);
+    %figure(S+2)
+    subplot(2,2,2);
+    surf(X,Y,NT.CatPot');
+    view(0,90);
+    colorbar
 
-    figure(S+3)
-    surf(X,Y,-NT.Bulkvel',C);
+    %figure(S+3)
+    subplot(2,2,3);
+    surf(X,Y,-NT.Bulkvel');
+    view(0,90);
+    colorbar
 
-    figure(S+4)
-    surf(X,Y,(-NT.Bulkvel.*r_nb'*e)',C);
+    %figure(S+4)
+    subplot(2,2,4);
+    surf(X,Y,(-NT.Bulkvel.*r_nb'*e)');
+    view(0,90);
+    colorbar
 
 
 
-
-figure(S+1)
+%figure(S+1)
+subplot(2,2,1);
 title('Bulk resistance')
 xlabel('Density [m^{-3}]')
 ylabel('Electron temperature [eV]')
 
-figure(S+2)
+%figure(S+2)
+subplot(2,2,2);
 title('Cahtode Potential Drop')
 xlabel('Density [m^{-3}]')
 ylabel('Electron temperature [eV]')
 % 
-figure(S+3)
+%figure(S+3)
+subplot(2,2,3);
 title('Electron Bulk Velocity')
 xlabel('Density [m^{-3}]')
 ylabel('Electron temperature [eV]')
 
-figure(S+4)
+%figure(S+4)
+subplot(2,2,4);
+title('Electron Current')
+xlabel('Density [m^{-3}]')
+ylabel('Electron temperature [eV]')
+%% 3D plots of init to check
+NTinit = OrganizeFinds(inmat1,inmat2, InpuTable,IniTable)
+S = 3;
+[X,Y] = meshgrid(invec1, invec2);
+C = X.*(Y*e/m_i).^0.5;
+
+    figure(S+1)
+    set(gcf,'position',[100,20,900,640])
+    subplot(2,2,1);
+    surf(X,Y,NTinit.ResMat');
+    view(0,90);
+    colorbar
+
+    %figure(S+2)
+    subplot(2,2,2);
+    surf(X,Y,NTinit.CatPot');
+    view(0,90);
+    colorbar
+
+    %figure(S+3)
+    subplot(2,2,3);
+    surf(X,Y,-NTinit.Bulkvel');
+    view(0,90);
+    colorbar
+
+    %figure(S+4)
+    subplot(2,2,4);
+    surf(X,Y,(-NTinit.Bulkvel.*r_nb'*e)');
+    view(0,90);
+    colorbar
+
+
+
+%figure(S+1)
+subplot(2,2,1);
+title('Bulk resistance')
+xlabel('Density [m^{-3}]')
+ylabel('Electron temperature [eV]')
+
+%figure(S+2)
+subplot(2,2,2);
+title('Cahtode Potential Drop')
+xlabel('Density [m^{-3}]')
+ylabel('Electron temperature [eV]')
+% 
+%figure(S+3)
+subplot(2,2,3);
+title('Electron Bulk Velocity')
+xlabel('Density [m^{-3}]')
+ylabel('Electron temperature [eV]')
+
+%figure(S+4)
+subplot(2,2,4);
 title('Electron Current')
 xlabel('Density [m^{-3}]')
 ylabel('Electron temperature [eV]')
 
+%%
 % 
+%figure(S+5)
+
+    figure(S+2)
+    set(gcf,'position',[100,20,900,640])
+    subplot(2,2,1);
+surf(X,Y,time')
+title('time')
+view(0,90);
+    colorbar
 
 
+%figure(S+6)
+subplot(2,2,2);
+surf(X,Y,itermat')
+title('iterations')
+view(0,90);
+    colorbar
+
+%figure(S+7)
+subplot(2,2,3);
+surf(X,Y,funcmat')
+title('no. function evaluations')
+view(0,90);
+    colorbar
+
+%figure(S+8)
+subplot(2,2,4);
+surf(X,Y,optmat')
+title('Measure of first-order optimality')
+view(0,90);
+zlim([0 5*10^10])
+    colorbar
 
 % %% figures on resistivity
 % %Count the ammount of previous figures
@@ -340,6 +483,9 @@ ylabel('Electron temperature [eV]')
 %     plot(nb(1:3:30),eta_n(1:3:30),nb(1:3:30),eta_n(2:3:30),nb(1:3:30),eta_n(3:3:30))
 % end
 %% Reorganising outputs into a structure
+
+load chirp.mat
+sound(y)
 
 function OutStruct = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable)
     OutStruct.OuTe = Tab2Mat(inmat1, inmat2, InpuTable.('Electrode temperature [eV]'));
