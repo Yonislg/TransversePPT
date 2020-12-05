@@ -78,7 +78,7 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,jacobian,
      0     0     0     1     0     1     0;
      0     1     0     1     0     1     0;
      1     1     0     0     0     0     1]);
-    options = optimoptions('fsolve','MaxFunctionEvaluations',5e4,'MaxIterations',1e3,'Display','none','JacobPattern', japat);%,'PlotFcn',@optimplotfirstorderopt);
+    options = optimoptions('fsolve','MaxFunctionEvaluations',4.2e3,'MaxIterations',5e2,'Display','none','JacobPattern', japat);%,'PlotFcn',@optimplotfirstorderopt);
     Te = plasma_properties{1};
     fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C);
     x0 = initial_state; %[varphi_sf,varphi_sf,gem_guess,gem_guess,E_guess,E_guess,ui0]%[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe];
