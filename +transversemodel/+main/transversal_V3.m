@@ -59,7 +59,7 @@ VC_guess=  varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))
 %% Function solver
 
 % Iterating over different values for wall electric field
-    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0,nb, ni_0, m_i, E_i, E_F, A_G, W, phi_A,h,Z);
+    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
     [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, output, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C);
 
@@ -80,6 +80,7 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,output,ex
      1     1     0     0     0     0     1]);
 
     options = optimoptions('fsolve','MaxFunctionEvaluations',4.2e3,'MaxIterations',5e2,'Display','none','JacobPattern', japat,'StepTolerance',1e-4);%'PlotFcn',@optimplotfirstorderopt);
+
     Te = plasma_properties{1};
     fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C);
     x0 = initial_state; %[varphi_sf,varphi_sf,gem_guess,gem_guess,E_guess,E_guess,ui0]%[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe];
@@ -100,22 +101,14 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,output,ex
 end
 
 %% Initial state Guessor
-function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0,nb, ni_0, m_i, E_i, E_F, A_G, W, phi_A,h,Z)
-global imeq e m_e;
+function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W)
+global imeq e ;
 import transversemodel.subfunctions.*;
 
 [EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, ni_0, m_i, E_i,E_F, A_G, W);
 [EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
 ue_guess = (gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e)  - gemC_guess +ge_bolz(ne_0, Te, -VC_guess*Te/e))/2/ne_0;
-
-VC_guess = (-e*nb*phi_A/h  - ue_guess*m_e*nb*(collRate_ei(nb,Z,Te)))*Te*h/nb;
-
-[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, ni_0, m_i, E_i,E_F, A_G, W);
-
-ue_guess = (gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e)  - gemC_guess +ge_bolz(ne_0, Te, -VC_guess*Te/e))/2/ne_0;
-
-VC_guess = (-e*nb*phi_A/h  - ue_guess*m_e*nb*(collRate_ei(nb,Z,Te)))*Te*h/nb;
 %(ge_bolz(ne_0, Te, -VC_guess*Te/e) - gemC_guess)/ne_0-sqrt(Te/m_i)
 %sqrt(Te/m_i)+(gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e))/ne_0
 % Collecting initial guesses for variables in one state
