@@ -1,7 +1,7 @@
 %% Version 3 of emission comparison tests
 
 
-close all
+%close all
 clear all
 
 import transversemodel.subfunctions.*;
@@ -17,18 +17,18 @@ CorF = 0.7;  % Guess best case scenario
 
 % Test TEE
 A_G = 1.2016e+06/2;
-Twk = 1000;   %Kelvin 
+Twk = 2000;   %Kelvin 
 
 % Test SEE
 E_i = 13.6;                    % Ionization energy of hydrogen in electronvolt [eV]
 
 
 % Main iterables
-iter= 200;
+%= 200;
 Te = 1*e;
 %n =  linspace(10^5,3*10^23,iter);       % Electron density  [m^-3]
-n =  logspace(6,25,iter);       % Electron density  [m^-3]
-varphi = linspace(-1,-2000,iter);
+n =  logspace(20,25,200);%iter);       % Electron density  [m^-3]
+varphi = -logspace(1,3,15);%iter);
 [N,V] = meshgrid(n,varphi);
 
 
@@ -40,7 +40,7 @@ varphi = linspace(-1,-2000,iter);
 [SEE_o, FEE_o, TEE_o, E] = iterfield(Twk, V, N, Te, A_G, E_i, W, E_F, CorF);
 
 figure(1)
-plot(n,E')
+loglog(n,E')
 title("Density and Electric field")    
 figure(2)
 %semilogy(n,SEE_o,'-',n,TEE_o,':',n,FEE_o,'--')
@@ -68,14 +68,14 @@ import transversemodel.subfunctions.*;
     ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
     
     % Iterating over the E_w field
-    E_w = wall_e_field(Twk, varphi, ge, n, Te);
+    E_w = wall_e_field(Twk, varphi, 0, n, Te);
     %E_w(imag(E_w)~=0) = nan;
     ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
-    geT = schottky(Twk, W, E_w, A_G);
-    geS = SEE(gi, E_i, W);
-    geF = FEE(W,E_F, E_w, CorF);
-    ge(:,1:3)
-    geT(:,1:3)
+    %geT = schottky(Twk, W, E_w, A_G);
+    %geS = SEE(gi, E_i, W);
+    %geF = FEE(W,E_F, E_w, CorF);
+    %ge(:,1:3)
+    %geT(:,1:3)
     %geS(:,1:3)
     %geF(:,1:3)
      %schottky(Twk, W, E_w, A_G) 
