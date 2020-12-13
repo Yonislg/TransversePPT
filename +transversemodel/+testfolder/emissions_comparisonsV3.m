@@ -1,7 +1,7 @@
 %% Version 3 of emission comparison tests
 
 
-%close all
+close all
 clear all
 
 import transversemodel.subfunctions.*;
@@ -13,11 +13,11 @@ m_i = 1.67262192369e-27;
 % Test FEE
 W = 4.0; %Workfunction 
 E_F = 7; % Fermi level
-CorF = 0.7;  % Guess best case scenario
+CorF = 0.9;  % Guess best case scenario
 
 % Test TEE
 A_G = 1.2016e+06/2;
-Twk = 2000;   %Kelvin 
+Twk = 1000;   %Kelvin 
 
 % Test SEE
 E_i = 13.6;                    % Ionization energy of hydrogen in electronvolt [eV]
@@ -25,7 +25,7 @@ E_i = 13.6;                    % Ionization energy of hydrogen in electronvolt [
 
 % Main iterables
 %= 200;
-Te = 1*e;
+Te = 3*e;
 %n =  linspace(10^5,3*10^23,iter);       % Electron density  [m^-3]
 n =  logspace(20,25,200);%iter);       % Electron density  [m^-3]
 varphi = -logspace(1,3,15);%iter);
@@ -61,7 +61,7 @@ import transversemodel.subfunctions.*;
     
     % Ion velocity
     ui0 = sqrt(Te/m_i);             % Ion sheath boundary velocity
-    gi = n.*ui0;                    % Ion sheath flux
+    gi = n.*ui0/2;                    % Ion sheath flux
     
     E_w = wall_e_field(Twk, varphi, 0, n, Te);
     
