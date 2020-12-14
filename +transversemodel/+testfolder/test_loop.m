@@ -76,7 +76,7 @@ r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in jo
 r_phi_A =  [10 100 1000];                           % Anode potential 
 r_h = [0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
 r_C_guess = [0 5 10 30];
-u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
+u_ze = 0%10^4;             % Downstream (axial) flow velocity in m/s
 By = 0;%.1;               % Magnetic field in Tesla
 
 
