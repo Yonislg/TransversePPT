@@ -59,8 +59,8 @@ L = 0.08;
 A_G = 80*10^4;          % Material constant for Schottkey equation
 
 % parameter ranges:
-T_iter= 15;
-n_iter = 15;
+T_iter= 25;
+n_iter = 25;
 
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
 r_T_wkc = [500 600 700 800];                        % Cathode temperture [k]
@@ -76,8 +76,8 @@ r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in jo
 r_phi_A =  [10 100 1000];                           % Anode potential 
 r_h = [0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
 r_C_guess = [0 5 10 30];
-u_ze = 0%10^4;             % Downstream (axial) flow velocity in m/s
-By = 0;%.1;               % Magnetic field in Tesla
+u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
+By = 0.1;               % Magnetic field in Tesla
 
 
 % Ionisation parameters 
@@ -158,7 +158,7 @@ inmat2 = InpuTable.(label_2);
 invec1 = unique(inmat1);
 invec2 = unique(inmat2);
 
-NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable)
+NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable);
 
 %% Plot with invec2 on the x-axis and color coding representing invec1
 
@@ -206,7 +206,7 @@ figure(4)
 if LOGDENS % in the case invec1= density and logarithmically plotted
     tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(logspace(invec1(1),invec1(end),11)),'UniformOutput',false)
 else
-    tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(linspace(invec1(1),invec1(end),11)),'UniformOutput',false)
+    tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(linspace(invec1(1),invec1(end),11)),'UniformOutput',false);
 end
 
 
