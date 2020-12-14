@@ -15,7 +15,7 @@ corF = 0.65;  % Develop function for later
 
 % Test TEE
 A_G = 1.2016e+06/2;
-Twk= 700;   %Kelvin 
+Twk= 1500;   %Kelvin 
 
 % Test SEE
 Te = 3*e;

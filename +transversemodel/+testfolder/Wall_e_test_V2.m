@@ -15,16 +15,16 @@ m_i = 1.67262192369e-27;
 mu_0 = 1.2566370614359173e-06;
 
 %% Input parameters
-CorF = 0.7;         % Exponentail facors
+CorF = 0.8;         % Exponentail facors
 Twk = 1000;          % Wall Electric temperature in Kelvin
 Twj  = Twk*k;       % Wall Temperature in Joules
 E_i = 13.6;         % Ionization energy of hydrogen in electronvolt [eV]
-W = 4.0;            % Workfunction
+W = 4.5;            % Workfunction
 A_G = 80*10^4;      % TEE material constant
 E_F = 10;           % Fermi Energy
 
 %% Iteratble Input parameters
-iter= 100;
+iter= 20;
 n = linspace(10,10^24,iter);          % Electron/Ion Density
 varphi = linspace(-1,-1000,iter);
 % vary over n, varphi, TE
@@ -44,7 +44,7 @@ C = N;%N.*V;
 [E_w, E_w0, E_w1, E_w2] = itertemp(3, N, V, E_i, W, CorF, Twk, A_G, E_F);
 
 figure(1)
-surf(N,V,reldif(E_w,E_w0),C)
+surf(N,V,(E_w-E_w0)./E_w0,C)%(N,V,reldif(E_w,E_w0),C)
 title("Relative influence of all emissionsons on E_W")
 xlabel("density [m^{-3}]")
 ylabel("\Phi[V]")
@@ -75,7 +75,7 @@ xlabel("density [m^{-3}]")
 %ylabel("\Phi[V]")
 figure(6)
 h3 = plot(n,((E_w-E_w2)./E_w2)');
-xlim([10, 2*10^22]);
+%xlim([10, 2*10^22]);
 title("Relative influence of SEE only on E_W compared to all emissions")
 set(h3, {'color'},num2cell(cc,2))
 xlabel("density [m^{-3}]")
