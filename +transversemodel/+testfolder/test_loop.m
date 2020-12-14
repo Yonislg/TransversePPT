@@ -75,7 +75,11 @@ end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  [10 100 1000];                           % Anode potential 
 r_h = [0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
+
 r_C_guess = [0 1 2 5 10 30];
+u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
+By = 0.1;               % Magnetic field in Tesla
+
 
 % Ionisation parameters 
 a_iz = 0.5;     %ionisation degree
@@ -133,7 +137,9 @@ for j = 1:n_iter
         plasma_properties = {Te, nb,a_iz,Z, m_i};
         design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
         
-        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,C_guess);
+
+        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, By, C_guess);
+
         
         if exitflag>0&&isreal(x)
             exitflag;
@@ -177,9 +183,11 @@ inmat1 = InpuTable.(label_1);
 inmat2 = InpuTable.(label_2);
 invec1 = unique(inmat1);
 invec2 = unique(inmat2);
-tic 
-NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable)
-toc
+
+
+NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable);
+
+
 %% Plot with invec2 on the x-axis and color coding representing invec1
 
 % create color scheme
@@ -230,7 +238,7 @@ set(gcf,'position',[100,20,900,640])
 if LOGDENS % in the case invec1= density and logarithmically plotted
     tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(logspace(invec1(1),invec1(end),11)),'UniformOutput',false)
 else
-    tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(linspace(invec1(1),invec1(end),11)),'UniformOutput',false)
+    tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(linspace(invec1(1),invec1(end),11)),'UniformOutput',false);
 end
 
 
