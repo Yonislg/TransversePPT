@@ -68,7 +68,7 @@ import transversemodel.subfunctions.*;
     ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
     
     % Iterating over the E_w field
-    E_w = wall_e_field(Twk, varphi, 0, n, Te);
+    E_w = wall_e_field(Twk, varphi, ge, n, Te);
     %E_w(imag(E_w)~=0) = nan;
     ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
     %geT = schottky(Twk, W, E_w, A_G);
@@ -80,7 +80,7 @@ import transversemodel.subfunctions.*;
     %geF(:,1:3)
      %schottky(Twk, W, E_w, A_G) 
      %FEE(W,E_F, E_w, CorF)
-    E_w = wall_e_field(Twk, varphi, ge, n, Te)
+    E_w = wall_e_field(Twk, varphi, ge, n, Te);
     %E_w(imag(E_w)~=0) = nan;
     ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
      %schottky(Twk, W, E_w, A_G)
