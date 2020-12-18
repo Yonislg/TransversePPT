@@ -11,13 +11,13 @@ e = 1.602176634e-19;
 m_i = 1.67262192369e-27;
 
 % Test FEE
-W = 4.0; %Workfunction 
-E_F = 7; % Fermi level
+W = 4.5; %Workfunction 
+E_F = 7; % Fermi energy of copper
 CorF = 0.9;  % Guess best case scenario
 
 % Test TEE
 A_G = 1.2016e+06/2;
-Twk = 1000;   %Kelvin 
+Twk = 3000;   %Kelvin 
 
 % Test SEE
 E_i = 13.6;                    % Ionization energy of hydrogen in electronvolt [eV]
@@ -27,7 +27,7 @@ E_i = 13.6;                    % Ionization energy of hydrogen in electronvolt [
 %= 200;
 Te = 3*e;
 %n =  linspace(10^5,3*10^23,iter);       % Electron density  [m^-3]
-n =  logspace(20,25,200);%iter);       % Electron density  [m^-3]
+n =  logspace(15,25,200);%iter);       % Electron density  [m^-3]
 varphi = -logspace(1,3,15);%iter);
 [N,V] = meshgrid(n,varphi);
 
@@ -38,16 +38,27 @@ varphi = -logspace(1,3,15);%iter);
 % GET Inspiration from wall field!
 
 [SEE_o, FEE_o, TEE_o, E] = iterfield(Twk, V, N, Te, A_G, E_i, W, E_F, CorF);
-
+cc=jet(15);
+tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(logspace(1,3,11)),'UniformOutput',false)
 figure(1)
-loglog(n,E')
-title("Density and Electric field")    
+
+hbv = loglog(n,E')
+    set(hbv, {'color'},num2cell(cc,2))
+        colormap(cc)
+    hc= colorbar;
+    set(hc,'Ticklabels',tiLabls1,'limit',[0 1],'Ticks',linspace(0,1,11))
+    set(hc.Label,'String','Potential drop in V')
+    xlabel('Density [m^{-3}]')
+    xlim([10^(19) 10^(25)])
+ylabel('Electric Field [V/m]')
+title(sprintf('Electric field (T_e = %u eV, T_w = %u K)',Te/e, Twk))  
 figure(2)
 %semilogy(n,SEE_o,'-',n,TEE_o,':',n,FEE_o,'--')
-loglog(n, min(SEE_o),'-',n,max(TEE_o),':',n,max(FEE_o),'--')
+loglog(n, max(SEE_o),'-',n,max(TEE_o),':',n,max(FEE_o),'--')
 ulm = ceil(log10(max(max([TEE_o,FEE_o,SEE_o]))));   % To set a boundary of interest for the plot
-ylim([10^(-20) 10^(ulm+5)])
-title(sprintf('Maximum Electron emissions (T_e = %u eV)',Te/e))
+ylim([10^(-10) 10^(ulm+5)])
+    xlim([10^(19) 10^(25)])
+title(sprintf('Maximum Electron emissions (T_e = %u eV, T_w = %u K)',Te/e, Twk))
 xlabel('Density [m^{-3}]')
 ylabel('Current density [A/m^2]')
 legend("SEE","TEE","FEE")

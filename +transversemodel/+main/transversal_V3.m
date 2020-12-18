@@ -30,11 +30,11 @@ hbar = 1.0546e-34;
 
    
     [Te, nb, a_iz, Z, m_i] = deal(plasma_properties{:});
-    ne_0=nb;
+    ne_0=nb;%/2!!
     [T_wka, T_wkc, E_i, A_G, h, L, W, E_Fin] = deal(design_parameters{:});
 
     % neutral density and ion density
-    n_n = (1-a_iz)/a_iz*ne_0;
+    n_n = (1-a_iz)/a_iz*nb;
     %ni_b = nb/Z;
     ni_0 = ne_0/Z;
     

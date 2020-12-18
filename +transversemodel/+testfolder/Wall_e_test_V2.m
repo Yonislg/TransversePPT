@@ -16,7 +16,7 @@ mu_0 = 1.2566370614359173e-06;
 
 %% Input parameters
 CorF = 0.8;         % Exponentail facors
-Twk = 1000;          % Wall Electric temperature in Kelvin
+Twk = 3000;          % Wall Electric temperature in Kelvin
 Twj  = Twk*k;       % Wall Temperature in Joules
 E_i = 13.6;         % Ionization energy of hydrogen in electronvolt [eV]
 W = 4.5;            % Workfunction

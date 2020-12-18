@@ -9,6 +9,9 @@ e = 1.602176634e-19;
 Te = 2.4*e;               % Electron Temperature in joules (not eV!)
 %vth_e = sqrt(8*Te/m_e/pi)
 %u_xe = -5000;
+lnlambda = 23 - log(nb^(1/2)*Z*(Te/e)^(-3/2))/log(10);
+
+NRL = 2.9*10^(-6)*nb/10^6*lnlambda*(Te/e)^(-3/2)
 
 nu_ei = collRate_ei(n_i,Z,Te) % search Markusic for typical values
 
