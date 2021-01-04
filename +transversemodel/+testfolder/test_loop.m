@@ -75,20 +75,20 @@ end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  logspace(1,3,T_iter);%[10 100 1000];                           % Anode potential 
 r_h = linspace(0.01, 0.05, n_iter);%[0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
-
+r_B = linspace(0,0.8,T_iter);
 r_C_guess = [0 1 2 5 10 30];
 u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
-By = 0.7;               % Magnetic field in Tesla
+%By = 0.7;               % Magnetic field in Tesla
 
 
 % Ionisation parameters 
-a_iz = 0.5;     %ionisation degree
+a_iz = 1;     %ionisation degree
 Z = 1;          %Ion charge number
 
 iter = 2500
 
 %% Setting up tables
-InputVarNames = {'Electron density [m^{-3}]', 'Electrode temperature [eV]','Anode potential' , 'Cathode temperature', 'Anode temperature', 'Electrode distance'};
+InputVarNames = {'Electron density [m^{-3}]', 'Electrode temperature [eV]','Anode potential' , 'Cathode temperature', 'Anode temperature', 'Electrode distance','Magnetic Field'};
 varTypes=repmat({'double'},1,length(InputVarNames));
 sz= [iter length(InputVarNames)];
 InpuTable = table('Size', sz, 'VariableTypes',varTypes, 'VariableNames', InputVarNames);
@@ -129,7 +129,8 @@ for j = 1:n_iter
         T_wkc = r_T_wkc(2);
         nb = 10^22;%r_nb(j);       % electron bulk density
         %n_n = (1-a_iz)/a_iz*ne_0;
-        phi_A = r_phi_A(te);
+        phi_A = 1000;%r_phi_A(te);
+        By = r_B(te);
         h = r_h(j);
         C_guess = r_C_guess(1);
         
@@ -143,7 +144,7 @@ for j = 1:n_iter
         if exitflag>0&&isreal(x)
             exitflag;
             ctr=ctr+1;
-            InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h};
+            InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h, By};
             IniTable(ctr,:) = array2table([initial_state phi_A-initial_state(2) phi_C-initial_state(1)]);
             OutpuTable(ctr,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D};
             %ExiTable(ctr,:) = array2table([exitflag fx]);
@@ -173,7 +174,7 @@ OutpuTable(ctr+1:end,:)=[];
 %% Make Matrices
 
 %matx = [r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]')]; 
-label_1 = 'Anode potential'; %'Electron density [m^{-3}]';
+label_1 = 'Magnetic Field'1; %'Electron density [m^{-3}]';
 label_2 = 'Electrode distance';%'Electrode temperature [eV]';
 
 inmat1 = InpuTable.(label_1); 
