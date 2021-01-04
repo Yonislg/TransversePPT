@@ -45,7 +45,7 @@ end
     % Continuity equation
     jxe_v2(4) = -2*sqrt(Te/m_i) + (ge_bolz(ne_0, Te, -x(2)*Te/e)+ ge_bolz(ne_0, Te, -x(1)*Te/e)- x(4)- x(3))/ne_0;
     % Anode electron emissions
-    jxe_v2(5) =  - x(4)+ schottky(T_wka, W, x(6), A_G) + ge_SEE + FEE(W,E_F, x(6)); 
+    jxe_v2(5) =  - x(4)+ schottky(T_wka, W, x(6), A_G) + FEE(W,E_F, x(6)) + ge_SEE ;
     % Anode electric field
     jxe_v2(6) = wall_e_field(T_wka, x(2),x(4),ne_0, Te) -x(6);  
     % Momentum equation
