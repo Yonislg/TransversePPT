@@ -8,27 +8,27 @@ import transversemodel.subfunctions.*;
 
 % General Parametrs
 e = 1.602176634e-19;
-m_i = 1.67262192369e-27;
+m_i = 28*1.67262192369e-27;
 
 % Test FEE
-W = 4.5; %Workfunction 
+W = 4.0; %Workfunction 
 E_F = 7; % Fermi energy of copper
 CorF = 0.9;  % Guess best case scenario
 
 % Test TEE
-A_G = 1.2016e+06/2;
-Twk = 3000;   %Kelvin 
+A_G = (1.2016e+06)/2;
+Twk = 3200;   %Kelvin 
 
 % Test SEE
-E_i = 13.6;                    % Ionization energy of hydrogen in electronvolt [eV]
+E_i = 14;                    % Ionization energy of hydrogen in electronvolt [eV]
 
 
 % Main iterables
 %= 200;
 Te = 3*e;
 %n =  linspace(10^5,3*10^23,iter);       % Electron density  [m^-3]
-n =  logspace(15,25,200);%iter);       % Electron density  [m^-3]
-varphi = -logspace(1,3,15);%iter);
+n =  logspace(20,23,200);%iter);       % Electron density  [m^-3]
+varphi = -10;%%-logspace(1,3,15);%iter);
 [N,V] = meshgrid(n,varphi);
 
 
@@ -38,26 +38,26 @@ varphi = -logspace(1,3,15);%iter);
 % GET Inspiration from wall field!
 
 [SEE_o, FEE_o, TEE_o, E] = iterfield(Twk, V, N, Te, A_G, E_i, W, E_F, CorF);
-cc=jet(15);
-tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(logspace(1,3,11)),'UniformOutput',false)
+%cc=jet(15);
+%tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(logspace(1,3,11)),'UniformOutput',false)
 figure(1)
 
 hbv = loglog(n,E')
-    set(hbv, {'color'},num2cell(cc,2))
-        colormap(cc)
-    hc= colorbar;
-    set(hc,'Ticklabels',tiLabls1,'limit',[0 1],'Ticks',linspace(0,1,11))
-    set(hc.Label,'String','Potential drop in V')
-    xlabel('Density [m^{-3}]')
-    xlim([10^(19) 10^(25)])
+%     set(hbv, {'color'},num2cell(cc,2))
+%         colormap(cc)
+%     hc= colorbar;
+%     set(hc,'Ticklabels',tiLabls1,'limit',[0 1],'Ticks',linspace(0,1,11))
+%     set(hc.Label,'String','Potential drop in V')
+%     xlabel('Density [m^{-3}]')
+%     xlim([10^(19) 10^(25)])
 ylabel('Electric Field [V/m]')
 title(sprintf('Electric field (T_e = %u eV, T_w = %u K)',Te/e, Twk))  
 figure(2)
-%semilogy(n,SEE_o,'-',n,TEE_o,':',n,FEE_o,'--')
-loglog(n, max(SEE_o),'-',n,max(TEE_o),':',n,max(FEE_o),'--')
+loglog(n,SEE_o,'-',n,TEE_o,':',n,FEE_o,'--')
+%loglog(n, max(SEE_o),'-',n,max(TEE_o),':',n,max(FEE_o),'--')
 ulm = ceil(log10(max(max([TEE_o,FEE_o,SEE_o]))));   % To set a boundary of interest for the plot
 ylim([10^(-10) 10^(ulm+5)])
-    xlim([10^(19) 10^(25)])
+   % xlim([10^(19) 10^(25)])
 title(sprintf('Maximum Electron emissions (T_e = %u eV, T_w = %u K)',Te/e, Twk))
 xlabel('Density [m^{-3}]')
 ylabel('Current density [A/m^2]')
@@ -76,12 +76,12 @@ import transversemodel.subfunctions.*;
     
     E_w = wall_e_field(Twk, varphi, 0, n, Te);
     
-    ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
+    ge =  schottky(Twk, W, E_w, A_G);%+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
     
     % Iterating over the E_w field
     E_w = wall_e_field(Twk, varphi, ge, n, Te);
     %E_w(imag(E_w)~=0) = nan;
-    ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W) + FEE(W,E_F, E_w, CorF);
+    ge =  schottky(Twk, W, E_w, A_G)+ SEE(gi, E_i, W); %+ FEE(W,E_F, E_w, CorF);
     %geT = schottky(Twk, W, E_w, A_G);
     %geS = SEE(gi, E_i, W);
     %geF = FEE(W,E_F, E_w, CorF);
