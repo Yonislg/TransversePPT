@@ -75,7 +75,7 @@ end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  logspace(1,3,T_iter);%[10 100 1000];                           % Anode potential 
 r_h = linspace(0.01, 0.05, n_iter);%[0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
-r_B = linspace(0,0.8,T_iter);
+r_B = linspace(0,0.8,n_iter);
 r_C_guess = [0 1 2 5 10 30];
 u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
 %By = 0.7;               % Magnetic field in Tesla
@@ -129,9 +129,9 @@ for j = 1:n_iter
         T_wkc = r_T_wkc(2);
         nb = 10^22;%r_nb(j);       % electron bulk density
         %n_n = (1-a_iz)/a_iz*ne_0;
-        phi_A = 1000;%r_phi_A(te);
-        By = r_B(te);
-        h = r_h(j);
+        phi_A = r_phi_A(te);
+        By = r_B(j);
+        h = r_h(n_iter);
         C_guess = r_C_guess(1);
         
         plasma_properties = {Te, nb,a_iz,Z, m_i};
@@ -174,8 +174,8 @@ OutpuTable(ctr+1:end,:)=[];
 %% Make Matrices
 
 %matx = [r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]')]; 
-label_1 = 'Magnetic Field'1; %'Electron density [m^{-3}]';
-label_2 = 'Electrode distance';%'Electrode temperature [eV]';
+label_1 = 'Magnetic Field'; %'Electron density [m^{-3}]';
+label_2 = 'Anode potential';%'Electrode temperature [eV]';
 
 inmat1 = InpuTable.(label_1); 
 inmat2 = InpuTable.(label_2);
