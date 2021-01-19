@@ -13,5 +13,6 @@ end
 function delta_W = schottky_decrease(E_w)
     eps_0 = 8.854187817620389e-12; 
     e = 1.602176634e-19;
-    delta_W = (e^3 * E_w / (4 * pi * eps_0)).^0.5;
+    pi_ac=3.14159265;
+    delta_W = (e^3 * E_w / (4 * pi_ac * eps_0)).^0.5;
 end

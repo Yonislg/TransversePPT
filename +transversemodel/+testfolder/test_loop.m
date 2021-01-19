@@ -63,12 +63,12 @@ T_iter= 25;
 n_iter = 25;
 
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
-r_T_wkc = [500 600 700 800];                        % Cathode temperture [k]
+r_T_wkc = [500 600 700 800 2500];                        % Cathode temperture [k]
 
-LOGDENS = 0; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
+LOGDENS = 1; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
 
 if LOGDENS
-    r_nb = logspace(10^20,2*10^23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
+    r_nb = logspace(20,23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
 else
     r_nb = 10^22;%linspace(10^20,2*10^23, n_iter);
 end
@@ -78,7 +78,9 @@ r_h = linspace(0.01, 0.05, n_iter);%[0.01 0.15 0.02 0.3 0.4 0.05];              
 r_B = linspace(0,0.8,n_iter);
 r_C_guess = [0 1 2 5 10 30];
 u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
+
 %By = 0.7;               % Magnetic field in Tesla
+
 
 
 % Ionisation parameters 
@@ -174,12 +176,14 @@ label_2 = 'Electrode distance';%'Electrode temperature [eV]';
 
 inmat1 = InpuTable.(label_1); 
 inmat2 = InpuTable.(label_2);
-invec1 = unique(inmat1);
-invec2 = unique(inmat2);
+invec1 = unique(inmat1)
+invec2 = unique(inmat2)
+
 
 
 NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable);
 Er = OrganizeFinds(inmat1,inmat2, InpuTable,ExiTable);
+
 
 %% Plot with invec2 on the x-axis and color coding representing invec1
 
@@ -230,7 +234,7 @@ set(gcf,'position',[100,20,900,640])
 
 % set ticks labaels for for invec1
 if LOGDENS % in the case invec1= density and logarithmically plotted
-    tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(logspace(invec1(1),invec1(end),11)),'UniformOutput',false)
+    tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(logspace(log10(invec1(1)),log10(invec1(end)),11)),'UniformOutput',false);
 else
     tiLabls1 = cellfun(@(c) sprintf('%0.1e',c),num2cell(linspace(invec1(1),invec1(end),11)),'UniformOutput',false);
 end
