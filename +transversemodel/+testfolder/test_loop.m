@@ -65,7 +65,7 @@ n_iter = 25;
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
 r_T_wkc = [500 600 700 800 2500];                        % Cathode temperture [k]
 
-LOGDENS = 1; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
+LOGDENS = 0; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
 
 if LOGDENS
     r_nb = logspace(20,23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
