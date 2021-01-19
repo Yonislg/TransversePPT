@@ -70,7 +70,7 @@ LOGDENS = 0; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
 if LOGDENS
     r_nb = logspace(10^20,2*10^23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
 else
-    r_nb = linspace(10^20,2*10^23, n_iter);
+    r_nb = 10^22;%linspace(10^20,2*10^23, n_iter);
 end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  logspace(1,3,T_iter);%[10 100 1000];                           % Anode potential 
@@ -99,11 +99,10 @@ sz2= [iter length(OutputVarNames)];
 IniTable = table('Size', sz2, 'VariableTypes',varTypes2, 'VariableNames', OutputVarNames);
 OutpuTable = table('Size', sz2, 'VariableTypes',varTypes2, 'VariableNames', OutputVarNames);
 
-% ExitVarNames = {'ExitFlag','Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity'};
-% varTypes3=['int8' repmat({'double'},1,length(ExitVarNames)-1)];
-% sz3= [iter length(ExitVarNames)];
-
-%ExiTable=table('Size', sz3, 'VariableTypes',varTypes3, 'VariableNames', ExitVarNames);
+ExitVarNames = {'ExitFlag', 'Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity'};
+varTypes3=['int8' repmat({'double'},1,length(ExitVarNames)-1)];
+sz3= [iter length(ExitVarNames)];
+ExiTable=table('Size', sz3, 'VariableTypes',varTypes3, 'VariableNames', ExitVarNames);
 %%
 ctr = 0;
 strt = 1;
@@ -127,11 +126,11 @@ for j = 1:n_iter
         Te= 2.5*e; %r_Te(te);
         T_wka = r_T_wka(3);
         T_wkc = r_T_wkc(2);
-        nb = 10^22;%r_nb(j);       % electron bulk density
+        nb = 10^22; %r_nb(j);       % electron bulk density
         %n_n = (1-a_iz)/a_iz*ne_0;
-        phi_A = r_phi_A(te);
-        By = r_B(j);
-        h = r_h(n_iter);
+        phi_A = r_phi_A(j);
+        By = 0;%.7;%r_B(j);
+        h = r_h(te);
         C_guess = r_C_guess(1);
         
         plasma_properties = {Te, nb,a_iz,Z, m_i};
@@ -147,13 +146,9 @@ for j = 1:n_iter
             InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h, By};
             IniTable(ctr,:) = array2table([initial_state phi_A-initial_state(2) phi_C-initial_state(1)]);
             OutpuTable(ctr,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D};
-            %ExiTable(ctr,:) = array2table([exitflag fx]);
+            ExiTable(ctr,:) = array2table([exitflag fx]);
         end
-        
-%         if output.algorithm = 
-%             
-%         elseif
-%             
+
            
         
         itermat(j,te) = output.iterations;
@@ -169,13 +164,13 @@ end
 InpuTable(ctr+1:end,:)=[];
 IniTable(ctr+1:end,:)=[];
 OutpuTable(ctr+1:end,:)=[];
-%ExiTable(ctr+1:end,:)=[];
+ExiTable(ctr+1:end,:)=[];
 
 %% Make Matrices
 
 %matx = [r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]')]; 
-label_1 = 'Magnetic Field'; %'Electron density [m^{-3}]';
-label_2 = 'Anode potential';%'Electrode temperature [eV]';
+label_1 = 'Anode potential';%'Magnetic Field'; %'Electron density [m^{-3}]'; 
+label_2 = 'Electrode distance';%'Electrode temperature [eV]';
 
 inmat1 = InpuTable.(label_1); 
 inmat2 = InpuTable.(label_2);
@@ -184,7 +179,7 @@ invec2 = unique(inmat2);
 
 
 NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable);
-
+Er = OrganizeFinds(inmat1,inmat2, InpuTable,ExiTable);
 
 %% Plot with invec2 on the x-axis and color coding representing invec1
 
@@ -192,6 +187,7 @@ NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable);
 cc=jet(n_iter);
 
 figure(1)
+
 
 set(gcf,'position',[100,20,900,640])
 %plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),-OutpuTable.('electron bulk velocity')(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
@@ -385,6 +381,10 @@ sound(y)
 
 function OutStruct = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable)
     OutStruct.OuTe = Tab2Mat(inmat1, inmat2, InpuTable.('Electrode temperature [eV]'));
+    OutStruct.InNe = Tab2Mat(inmat1, inmat2, InpuTable.('Electron density [m^{-3}]'));
+    OutStruct.InBy = Tab2Mat(inmat1, inmat2, InpuTable.('Magnetic Field'));
+    OutStruct.InH = Tab2Mat(inmat1, inmat2, InpuTable.('Electrode distance'));
+    OutStruct.InVA = Tab2Mat(inmat1, inmat2, InpuTable.('Anode potential'));
     OutStruct.CatDrop = Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode sheath potential drop'));
     OutStruct.AnoDrop = Tab2Mat(inmat1, inmat2, OutpuTable.('Anode sheath potential drop'));
     OutStruct.CatEm = Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode emissions'));
@@ -392,9 +392,14 @@ function OutStruct = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable)
     OutStruct.CatEfield = Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode E-field'));
     OutStruct.AnoEfield = Tab2Mat(inmat1, inmat2, OutpuTable.('Anode E-field'));
     OutStruct.Bulkvel =  Tab2Mat(inmat1, inmat2, OutpuTable.('electron bulk velocity'));
-    OutStruct.CatPot  =  Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode potential'));
-    OutStruct.AnoPot  =  Tab2Mat(inmat1, inmat2, OutpuTable.('Anode potential'));
-    OutStruct.ResMat  =  OutStruct.AnoPot-OutStruct.CatPot;
+    if any(strcmp(OutpuTable.Properties.VariableNames,'Cathode potential'))
+        OutStruct.CatPot  =  Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode potential'));
+        OutStruct.AnoPot  =  Tab2Mat(inmat1, inmat2, OutpuTable.('Anode potential'));
+    %OutStruct.MagPot  = OutStruct.OuBy*u_ze./OutStruct.OuH;
+        OutStruct.ResMat  =  OutStruct.AnoPot-OutStruct.CatPot;
+    end 
+    
+    % ResPot = m_e/e*collRate_ei(NT.OuNe/Z,Z,NT.OuTe*e).*NT.Bulkvel.*NT.OuH
 end
 
 %% Matrix Maker
