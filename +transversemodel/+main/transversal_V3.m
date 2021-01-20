@@ -48,7 +48,7 @@ else
 end
     
     
-A_G =A_G*F_TEE;%      % Material Constant for shottkey equation
+
 
 %% Initial Guesses for Wall Electric field
 varphi_sf = 0.5*log(2*pi*m_e/m_i); % Guess for sheath potential drop of a floating wall assuming Ti=0

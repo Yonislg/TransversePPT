@@ -36,7 +36,7 @@ else
     fprintf('\nSecondary electron emmissions are not included');
 end
 
-F_TEE=0; %Include SEE 
+F_TEE=1; %Include TEE 
 if F_TEE
     fprintf('\nThermal electron emmissions are included');
 else
@@ -63,14 +63,14 @@ T_iter= 25;
 n_iter = 25;
 
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
-r_T_wkc = [500 600 700 800 2500];                        % Cathode temperture [k]
+r_T_wkc = linspace(2000,3500,25); %[500 600 700 800 2500];                        % Cathode temperture [k]
 
-LOGDENS = 0; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
+LOGDENS = 1; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
 
 if LOGDENS
     r_nb = logspace(20,23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
 else
-    r_nb = 10^22;%linspace(10^20,2*10^23, n_iter);
+    r_nb = linspace(10^20, 10^23, n_iter);
 end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  logspace(1,3,T_iter);%[10 100 1000];                           % Anode potential 
@@ -89,6 +89,7 @@ Z = 1;          %Ion charge number
 
 iter = 2500
 
+A_G =A_G*F_TEE;%      % Material Constant for shottkey equation
 %% Setting up tables
 InputVarNames = {'Electron density [m^{-3}]', 'Electrode temperature [eV]','Anode potential' , 'Cathode temperature', 'Anode temperature', 'Electrode distance','Slug Thickness'};
 varTypes=repmat({'double'},1,length(InputVarNames));
@@ -125,15 +126,15 @@ optmat = zeros(n_iter, T_iter);
 for j = 1:n_iter
     for te = 1:T_iter
         
-        Te= 2.5*e; %r_Te(te);
+        Te = r_Te(te); % Te= 2.5*e; %
         T_wka = r_T_wka(3);
-        T_wkc = r_T_wkc(2);
-        nb = 10^22; %r_nb(j);       % electron bulk density
+        T_wkc = r_T_wkc(j);
+        nb = r_nb(j);       % electron bulk density 10^22; %
         %n_n = (1-a_iz)/a_iz*ne_0;
-        phi_A = r_phi_A(j);
+        phi_A = 1000; %r_phi_A(j);
         %By = 0;%.7;%r_B(j);
-        h = r_h(te);
-        C_guess = r_C_guess(1);
+        h = 0.05;%r_h(te);
+        C_guess = r_C_guess(2);
         
         plasma_properties = {Te, nb,a_iz,Z, m_i};
         design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
@@ -151,8 +152,6 @@ for j = 1:n_iter
             ExiTable(ctr,:) = array2table([exitflag fx]);
         end
 
-           
-        
         itermat(j,te) = output.iterations;
         funcmat(j,te) = output.funcCount;
         optmat(j,te) = output.firstorderopt;
@@ -171,15 +170,15 @@ ExiTable(ctr+1:end,:)=[];
 %% Make Matrices
 
 %matx = [r_nb,r_Te/e,InpuTable.('Electron density'),InpuTable.('Electrode temperature [eV]')]; 
-label_1 = 'Anode potential';%'Magnetic Field'; %'Electron density [m^{-3}]'; 
-label_2 = 'Electrode distance';%'Electrode temperature [eV]';
+label_1 = 'Electron density [m^{-3}]'; % 'Anode potential';%'Magnetic Field'; %
+label_2 = 'Electrode temperature [eV]'; % 'Electrode distance';%
 
 inmat1 = InpuTable.(label_1); 
 inmat2 = InpuTable.(label_2);
 invec1 = unique(inmat1);
 invec2 = unique(inmat2);
 
-NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable);
+NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable)
 %Er = OrganizeFinds(inmat1,inmat2, InpuTable,ExiTable);
 
 %% Plot with invec2 on the x-axis and color coding representing invec1
