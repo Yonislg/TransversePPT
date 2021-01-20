@@ -75,13 +75,13 @@ end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  logspace(1,3,T_iter);%[10 100 1000];                           % Anode potential 
 r_h = linspace(0.01, 0.05, n_iter);%[0.01 0.15 0.02 0.3 0.4 0.05];                             % Distance between electrodes
-r_B = linspace(0,0.8,n_iter);
+%r_B = linspace(0,0.8,n_iter);
 r_C_guess = [0 1 2 5 10 30];
 u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
 
 %By = 0.7;               % Magnetic field in Tesla
 
-
+d_j = 0.03;
 
 % Ionisation parameters 
 a_iz = 1;     %ionisation degree
@@ -90,12 +90,12 @@ Z = 1;          %Ion charge number
 iter = 2500
 
 %% Setting up tables
-InputVarNames = {'Electron density [m^{-3}]', 'Electrode temperature [eV]','Anode potential' , 'Cathode temperature', 'Anode temperature', 'Electrode distance','Magnetic Field'};
+InputVarNames = {'Electron density [m^{-3}]', 'Electrode temperature [eV]','Anode potential' , 'Cathode temperature', 'Anode temperature', 'Electrode distance','Slug Thickness'};
 varTypes=repmat({'double'},1,length(InputVarNames));
 sz= [iter length(InputVarNames)];
 InpuTable = table('Size', sz, 'VariableTypes',varTypes, 'VariableNames', InputVarNames);
 
-OutputVarNames = {'Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity','Anode potential', 'Cathode potential'};
+OutputVarNames = {'Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity','Anode potential', 'Cathode potential','Magnetic Field'};
 varTypes2=repmat({'double'},1,length(OutputVarNames));
 sz2= [iter length(OutputVarNames)];
 IniTable = table('Size', sz2, 'VariableTypes',varTypes2, 'VariableNames', OutputVarNames);
@@ -131,7 +131,7 @@ for j = 1:n_iter
         nb = 10^22; %r_nb(j);       % electron bulk density
         %n_n = (1-a_iz)/a_iz*ne_0;
         phi_A = r_phi_A(j);
-        By = 0;%.7;%r_B(j);
+        %By = 0;%.7;%r_B(j);
         h = r_h(te);
         C_guess = r_C_guess(1);
         
@@ -139,15 +139,15 @@ for j = 1:n_iter
         design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
         
 
-        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, By, C_guess);
+        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_j, C_guess);
 
         
         if exitflag>0&&isreal(x)
             exitflag;
             ctr=ctr+1;
-            InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h, By};
-            IniTable(ctr,:) = array2table([initial_state phi_A-initial_state(2) phi_C-initial_state(1)]);
-            OutpuTable(ctr,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D};
+            InpuTable(ctr,:) = {nb, Te/e,phi_A, T_wkc, T_wka, h, d_j};
+            %IniTable(ctr,:) = array2table([initial_state phi_A-initial_state(2) phi_C-initial_state(1)]);
+            OutpuTable(ctr,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By};
             ExiTable(ctr,:) = array2table([exitflag fx]);
         end
 
@@ -176,14 +176,11 @@ label_2 = 'Electrode distance';%'Electrode temperature [eV]';
 
 inmat1 = InpuTable.(label_1); 
 inmat2 = InpuTable.(label_2);
-invec1 = unique(inmat1)
-invec2 = unique(inmat2)
-
-
+invec1 = unique(inmat1);
+invec2 = unique(inmat2);
 
 NT = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable);
-Er = OrganizeFinds(inmat1,inmat2, InpuTable,ExiTable);
-
+%Er = OrganizeFinds(inmat1,inmat2, InpuTable,ExiTable);
 
 %% Plot with invec2 on the x-axis and color coding representing invec1
 
@@ -222,11 +219,13 @@ set(gcf,'position',[100,20,900,640])
 
 %figure(4)
     subplot(2,2,4);
-    hres = plot(invec2,NT.ResMat');
+    hres = plot(invec2,NT.OuBy');
     set(hres, {'color'},num2cell(cc,2))
-    title('Bulk Potentail Drop')
+    %title('Bulk Potentail Drop')
+    title('Magnetic Field')
     xlabel(label_2)
-    ylabel('Potential Difference [V]')
+    ylabel('B_y [T]')
+    %ylabel('Potential Difference [V]')
     
 %plot(InpuTable.('Electrode temperature [eV]')(strt:ctr),OutpuTable.("Anode potential")(strt:ctr)-OutpuTable.("Cathode potential")(strt:ctr),style3,'DisplayName', sprintf('n = %.1e m^{-3}', nb),'color',cc(j,:))
 
@@ -261,11 +260,13 @@ set(gcf,'position',[100,50,900,640])
 c2=jet(length(unique(inmat2)));
     %figure(S+1)
     subplot(2,2,1);
-    hrm = plot(invec1,NT.ResMat);
+    hrm = plot(invec1,NT.OuBy);
     set(hrm, {'color'},num2cell(c2,2))
-    title('Bulk resistance')
     xlabel(label_1)
-    ylabel('Potentail Drop [V]')
+    %title('Bulk Potentail Drop')
+    title('Magnetic Field')
+    ylabel('B_y [T]')
+    %ylabel('Potential Difference [V]')
 
     
     %figure(S+2)
@@ -330,7 +331,7 @@ C = X.*(Y*e/m_i).^0.5;
     figure(S+1)
     set(gcf,'position',[100,20,900,640])
     subplot(2,2,1);
-    surf(X,Y,NT.ResMat');
+    surf(X,Y,NT.OuBy');
     %view(0,90);
     colorbar
 
@@ -356,7 +357,7 @@ C = X.*(Y*e/m_i).^0.5;
 
 %figure(S+1)
 subplot(2,2,1);
-title('Bulk resistance')
+title('Magnetic Field')
     xlabel(label_1)
     ylabel(label_2)
 
@@ -386,7 +387,7 @@ sound(y)
 function OutStruct = OrganizeFinds(inmat1,inmat2, InpuTable,OutpuTable)
     OutStruct.OuTe = Tab2Mat(inmat1, inmat2, InpuTable.('Electrode temperature [eV]'));
     OutStruct.InNe = Tab2Mat(inmat1, inmat2, InpuTable.('Electron density [m^{-3}]'));
-    OutStruct.InBy = Tab2Mat(inmat1, inmat2, InpuTable.('Magnetic Field'));
+    OutStruct.OuBy = Tab2Mat(inmat1, inmat2, OutpuTable.('Magnetic Field'));
     OutStruct.InH = Tab2Mat(inmat1, inmat2, InpuTable.('Electrode distance'));
     OutStruct.InVA = Tab2Mat(inmat1, inmat2, InpuTable.('Anode potential'));
     OutStruct.CatDrop = Tab2Mat(inmat1, inmat2, OutpuTable.('Cathode sheath potential drop'));

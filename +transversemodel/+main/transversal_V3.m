@@ -9,7 +9,7 @@
 
 
 
-function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,u_ze, By, C_guess)%, F_TEE, F_FEE, F_SEE, imeq)
+function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx, exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,u_ze, d_J, C_guess)%, F_TEE, F_FEE, F_SEE, imeq)
 
 
 %Physical constants
@@ -64,7 +64,7 @@ VC_guess=  varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))
     initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
 
 
-    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, output, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,By);
+    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By ,x,fx, output, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,d_J);
 
 
 %[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian] = currentsolver(plasma_properties,design_parameters, x, phi_A, phi_C);
@@ -72,9 +72,9 @@ end
 
 %% functions
 
-function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,output,exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,By)
+function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,output,exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,d_J)
 
-    global e imeq;
+    global e imeq mu_0;
     import transversemodel.main.total_current;
     japat=spones( [1     0     1     0     1     0     0;
    
@@ -88,7 +88,8 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,output,ex
     options = optimoptions('fsolve','MaxFunctionEvaluations',4.2e3,'MaxIterations',5e2,'Display','none','JacobPattern', japat,'StepTolerance',1e-4);%'PlotFcn',@optimplotfirstorderopt);
 
     Te = plasma_properties{1};
-    fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C,u_ze,By);
+    nb = plasma_properties{3};
+    fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C,u_ze,d_J);
     x0 = initial_state; %[varphi_sf,varphi_sf,gem_guess,gem_guess,E_guess,E_guess,ui0]%[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe];
     [x,fx,exitflag,output]  = fsolve(fun,x0,options);
     V_C    = x(1)*Te/e;%*Te
@@ -104,6 +105,7 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx,output,ex
     end
     phi_B  = phi_A - V_A;
     phi_D  = phi_C - V_C;
+    By = 0.5*mu_0*e*nb*x(7)*d_J;
 end
 
 %% Initial state Guessor

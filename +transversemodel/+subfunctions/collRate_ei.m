@@ -8,7 +8,6 @@ function nu = collRate_ei(n_i,Z,T_e)
     m=m_e;
     ne = n_i*Z;
     
-
     lnlambda= 23 - log(ne.^(1/2)*Z.*(T_e/e).^(-3/2))/log(10);%10;% Using 23 - ln(ne^1/2*Zi*Te^-3/2)
 
     %nu = n*Z^2*e^4*lnlambda/(4*pi*eps_0^2*m^2*v^3); Gold ston

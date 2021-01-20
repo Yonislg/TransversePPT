@@ -1,9 +1,9 @@
 %% Calulcates current density and sheath potential drop for transverse slabs of the plasma
 
-function jxe_v2 = total_current(x, plasma_properties,design_parameters, phi_A, phi_C,u_ze, By)
+function jxe_v2 = total_current(x, plasma_properties,design_parameters, phi_A, phi_C,u_ze, d_J)
     %% prepping script
     import transversemodel.subfunctions.*;
-    global  imeq F_SEE F_FEE;
+    global  imeq F_SEE F_FEE mu_0;
     % to be adde as input: u_ze, ion mass number.
     % Physiscs constsants
     e = 1.602176634e-19;            % Electron charge
@@ -50,6 +50,6 @@ end
     jxe_v2(6) = wall_e_field(T_wka, x(2),x(4),ne_0, Te) -x(6);  
     % Momentum equation
     if imeq
-        jxe_v2(7) = -e*nb*(phi_A-x(2)*Te/e-(phi_C-x(1)*Te/e))/h +e*nb*u_ze*By - x(7)*m_e*nb*(collRate_ei(ni_b,Z,Te)+n_n*vth_e*10^(-20));%+ u_ze*(e*nb*L*x(7)*mu_0); % Bulk current
+        jxe_v2(7) = -e*nb*(phi_A-x(2)*Te/e-(phi_C-x(1)*Te/e))/h - 0.5*mu_0*(e*nb)^2*u_ze*x(7)*d_J - x(7)*m_e*nb*(collRate_ei(ni_b,Z,Te)+n_n*vth_e*10^(-20));%+ u_ze*(e*nb*L*x(7)*mu_0); % Bulk current
     end
 end
