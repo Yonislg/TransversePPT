@@ -5,8 +5,8 @@ function ge = schottky(T_w, W, E_w, A_G)
     W = W*e; % ones(size(E_w))*
     delta_W = schottky_decrease(E_w);
     %delta_W = [0, 1.07, 1.57, 1.81, 2.01, 2.18]*e
-    exponent = -(W - delta_W) /(k *T_w);
-    ge = A_G *T_w.^2 / e .* exp(exponent); % including the term e depends on parameter A_G. Devide by e because to get flux
+    exponent = -(W - delta_W)./(k .*T_w);
+    ge = A_G .*T_w.^2 / e .* exp(exponent); % including the term e depends on parameter A_G. Devide by e because to get flux
 end
 
 

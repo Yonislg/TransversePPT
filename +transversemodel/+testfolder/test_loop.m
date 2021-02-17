@@ -36,7 +36,7 @@ else
     fprintf('\nSecondary electron emmissions are not included');
 end
 
-F_TEE=1; %Include TEE 
+F_TEE=0; %Include TEE 
 if F_TEE
     fprintf('\nThermal electron emmissions are included');
 else
@@ -65,12 +65,12 @@ n_iter = 25;
 r_T_wka = [300 400 500 600 700];                    % Anode temperture [k]
 r_T_wkc = linspace(2000,3500,25); %[500 600 700 800 2500];                        % Cathode temperture [k]
 
-LOGDENS = 1; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
+LOGDENS = 0; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
 
 if LOGDENS
-    r_nb = logspace(20,23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
+    r_nb = logspace(19,22.9, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
 else
-    r_nb = linspace(10^20, 10^23, n_iter);
+    r_nb = linspace(10^20, 7.5*10^22, n_iter);
 end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  logspace(1,3,T_iter);%[10 100 1000];                           % Anode potential 
@@ -81,7 +81,7 @@ u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
 
 %By = 0.7;               % Magnetic field in Tesla
 
-d_j = 0.03;
+d_j = 0.02;
 
 % Ionisation parameters 
 a_iz = 1;     %ionisation degree
@@ -128,13 +128,13 @@ for j = 1:n_iter
         
         Te = r_Te(te); % Te= 2.5*e; %
         T_wka = r_T_wka(3);
-        T_wkc = r_T_wkc(j);
+        T_wkc = 2000;%r_T_wkc(j);
         nb = r_nb(j);       % electron bulk density 10^22; %
         %n_n = (1-a_iz)/a_iz*ne_0;
         phi_A = 1000; %r_phi_A(j);
         %By = 0;%.7;%r_B(j);
         h = 0.05;%r_h(te);
-        C_guess = r_C_guess(2);
+        C_guess = r_C_guess(1);
         
         plasma_properties = {Te, nb,a_iz,Z, m_i};
         design_parameters = {T_wka, T_wkc, E_i, A_G, h, L, W, E_F};
