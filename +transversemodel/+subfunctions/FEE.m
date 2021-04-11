@@ -16,7 +16,7 @@ m_e = 9.1093837015e-31;
     b = 4*sqrt(2*m_e)*e^(3/2)/(3*e*hbar);  %  6.8307 eV^-3/2 V nm^-1
     PF = 4*W/(W+E_F)*sqrt(E_F/W); %from Fridman and R. Forbes (Sommerfeld model)
     corF1 = PF;% 
-    corF2 = CorF;%corF;%v(E_W,W); % Correction factor, dependent on Delta_W/W , now asumed to be 1
+    corF2 = v(E_W,W); % Correction factor, dependent on Delta_W/W , now asumed to be 1% CorF;%corF;
     ge_FEE = corF1.*E_W.^2*a/W.*exp(-b*W^(3/2)*corF2./E_W);
 
 end
