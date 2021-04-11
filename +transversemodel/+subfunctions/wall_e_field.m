@@ -18,7 +18,7 @@ function E_w= wall_e_field(T_wk, varphi_w,g_e,ne_0, Te)%, ui0)%[E_w,scnd_term,th
     par= (1-(1-2*varphi_w*frac).^0.5);
     scnd_term = g_e./(ne_0.*ce0).*sqrt(T_w./Te).*par;
     thrd_term = Mi0^2*((1-2.*varphi_w./Mi0^2).^0.5 - 1);
-    half_dvarphi_dxi_squared = exp(varphi_w)-1 + scnd_term + thrd_term;
+    half_dvarphi_dxi_squared = exp(varphi_w) -1 + scnd_term + thrd_term; %
 %     if half_dvarphi_dxi_squared<0
 %        display(half_dvarphi_dxi_squared)
 %        display(scnd_term)
@@ -26,4 +26,5 @@ function E_w= wall_e_field(T_wk, varphi_w,g_e,ne_0, Te)%, ui0)%[E_w,scnd_term,th
 %     end
     dvarphi_dxi = (2*half_dvarphi_dxi_squared).^0.5;
     E_w = sqrt(ne_0.*Te/eps_0).*dvarphi_dxi;
+    %E_w = dvarphi_dxi;
 end

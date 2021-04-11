@@ -51,6 +51,6 @@ legend("300 K","1000","1700")
 function ge = iterfield(Twk, E_w, A_G, W, E_F, CorF)
 import transversemodel.subfunctions.*;
 e = 1.602176634e-19;
-    ge =  (schottky(Twk, W, E_w, A_G) + FEE(W,E_F, E_w, CorF))*e/10^4;
+    ge =  (schottky(Twk, W, E_w, A_G) + FEE(W,E_F, E_w))*e/10^4;
     
 end

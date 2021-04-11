@@ -9,11 +9,11 @@
 
 
 
-function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx, exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,u_ze, d_J, C_guess)%, F_TEE, F_FEE, F_SEE, imeq)
+function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx, exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C,u_ze, d_J, C_guess, F_SEE, F_TEE, F_FEE,fix,initial_state)
 
 
 %Physical constants
-global k e eps_0 hbar m_e mu_0 F_FEE F_TEE;
+global k e eps_0 hbar m_e mu_0;
 import transversemodel.subfunctions.*;
 
 % To be included:  u_ze 
@@ -30,7 +30,7 @@ hbar = 1.0546e-34;
 
    
     [Te, nb, a_iz, Z, m_i] = deal(plasma_properties{:});
-    ne_0=nb;%/2!!
+    ne_0=nb/2;
     [T_wka, T_wkc, E_i, A_G, h, L, W, E_Fin] = deal(design_parameters{:});
 
     % neutral density and ion density
@@ -61,10 +61,11 @@ VC_guess=  varphi_sf-C_guess;% log(2*exp(varphi_sf)/(1+exp(e*(phi_A-phi_C)/Te)))
 %% Function solver
 
 % Iterating over different values for wall electric field
-    initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
-
-
-    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By ,x,fx, output, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,d_J);
+    if ~exist('initial_state','var')
+        initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, nb, ne_0, ni_0, m_i, E_i, E_F, A_G, W, F_SEE, F_FEE,fix);
+    end
+    
+    [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By ,x,fx, output, exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,d_J,F_SEE, F_FEE,fix);
 
 
 %[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D,x,fx, jacobian] = currentsolver(plasma_properties,design_parameters, x, phi_A, phi_C);
@@ -72,7 +73,7 @@ end
 
 %% functions
 
-function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,output,exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,d_J)
+function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,output,exitflag] = currentsolver(plasma_properties,design_parameters, initial_state, phi_A, phi_C,u_ze,d_J,F_SEE, F_FEE,fix)
 
     global e imeq mu_0;
     import transversemodel.main.total_current;
@@ -85,13 +86,13 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,outp
      0     1     0     1     0     1     0;
      1     1     0     0     0     0     1]);
 
-    options = optimoptions('fsolve','MaxFunctionEvaluations',4.2e3,'MaxIterations',5e2,'Display','none','JacobPattern', japat,'StepTolerance',1e-4);%'PlotFcn',@optimplotfirstorderopt);
+    options = optimoptions('fsolve','MaxFunctionEvaluations',1.5e4,'MaxIterations',2e3,'FunctionTolerance',2e-3,'Display','none','JacobPattern', japat);%,'PlotFcn',@optimplotfirstorderopt);%);%%,'StepTolerance',1e-4);%
 
     Te = plasma_properties{1};
     nb = plasma_properties{3};
-    fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C,u_ze,d_J);
+    fun =  @(x)total_current(x, plasma_properties,design_parameters, phi_A, phi_C,u_ze,d_J,F_SEE, F_FEE,fix);
     x0 = initial_state; %[varphi_sf,varphi_sf,gem_guess,gem_guess,E_guess,E_guess,ui0]%[V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe];
-    [x,fx,exitflag,output]  = fsolve(fun,x0,options);
+    [x,fx,exitflag,output,jacobian]  = fsolve(fun,x0,options);
     V_C    = x(1)*Te/e;%*Te
     V_A    = x(2)*Te/e;%*Te
     geC_em = x(3);
@@ -109,14 +110,17 @@ function [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,outp
 end
 
 %% Initial state Guessor
-function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W)
+function initial_state = init_guessor(VC_guess, VA_guess,T_wka, T_wkc,  Te, nb, ne_0, ni_0, m_i, E_i, E_F, A_G, W,F_SEE, F_FEE,fix)
 global imeq e ;
 import transversemodel.subfunctions.*;
 
-[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, ni_0, m_i, E_i,E_F, A_G, W);
-[EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W);
+[EC_guess, gemC_guess] = wall_guess(T_wkc, VC_guess, Te, ne_0, ni_0, m_i, E_i,E_F, A_G, W,F_SEE, F_FEE, fix);
+[EA_guess, gemA_guess] = wall_guess(T_wka, VA_guess, Te, ne_0, ni_0, m_i, E_i, E_F, A_G, W,F_SEE, F_FEE,0);
+%gemA_guess = 0;
+%EC_guess = 9.57368785*10^7;
+%gemC_guess = schottky(T_wkc, W, EC_guess, A_G);
 
-ue_guess = (gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e)  - gemC_guess +ge_bolz(ne_0, Te, -VC_guess*Te/e))/2/ne_0;
+ue_guess = (gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e)  - gemC_guess +ge_bolz(ne_0, Te, -VC_guess*Te/e))/2/nb;
 %(ge_bolz(ne_0, Te, -VC_guess*Te/e) - gemC_guess)/ne_0-sqrt(Te/m_i)
 %sqrt(Te/m_i)+(gemA_guess -  ge_bolz(ne_0, Te, -VA_guess*Te/e))/ne_0
 % Collecting initial guesses for variables in one state
@@ -128,9 +132,11 @@ end
 
 end
 
-function [E_guess, gem_guess] = wall_guess(T_wk, varphi_sf, Te, ne_0, ni_0, m_i, E_i, E_Fin, A_G, W)
-global F_SEE F_FEE;
+function [E_guess, gem_guess] = wall_guess(T_wk, varphi_sf, Te, ne_0, ni_0, m_i, E_i, E_Fin, A_G, W,F_SEE, F_FEE, fix)
+
 import transversemodel.subfunctions.*;
+
+    eps_0 = 8.854187817620389e-12; 
 if F_SEE
     ge_SEE = SEE(ni_0*sqrt(Te/m_i), E_i, W);
 else 
@@ -143,17 +149,17 @@ else
     E_F = 0;
 end
 
-E_guess1 = wall_e_field(T_wk, varphi_sf,0,ne_0, Te);
-gem_guess1 = schottky(T_wk, W, E_guess1, A_G)+ ge_SEE;
+E_guess1 = wall_e_field(T_wk, varphi_sf,0,ne_0, Te)
+%gem_guess1 = schottky(T_wk, W, E_guess1, A_G,fix)+ ge_SEE;
 
-E_guess2 = wall_e_field(T_wk, varphi_sf,gem_guess1,ne_0, Te);
-gem_guess2 = schottky(T_wk, W, E_guess2, A_G)+ ge_SEE+ FEE(W,E_F, E_guess2);
+% E_guess2 = wall_e_field(T_wk, varphi_sf,gem_guess1,ne_0, Te)
+% gem_guess2 = schottky(T_wk, W, E_guess2, A_G,fix)+ ge_SEE+ FEE(W,E_F, E_guess2);
+% 
+% E_guess3 = wall_e_field(T_wk, varphi_sf,gem_guess2 ,ne_0, Te)
+% gem_guess3 = schottky(T_wk, W, E_guess3, A_G,fix)+ ge_SEE+ FEE(W,E_F, E_guess3);
 
-E_guess3 = wall_e_field(T_wk, varphi_sf,gem_guess2 ,ne_0, Te);
-gem_guess3 = schottky(T_wk, W, E_guess3, A_G)+ ge_SEE+ FEE(W,E_F, E_guess3);
-
-E_guess = wall_e_field(T_wk, varphi_sf,gem_guess3 ,ne_0, Te);
-gem_guess = schottky(T_wk, W, E_guess, A_G)+ ge_SEE+ FEE(W,E_F, E_guess);
+E_guess = E_guess1;%wall_e_field(T_wk, varphi_sf,gem_guess3 ,ne_0, Te)
+gem_guess = schottky(T_wk, W, E_guess, A_G,fix)+ ge_SEE+ FEE(W,E_F, E_guess);
 
 
 end
