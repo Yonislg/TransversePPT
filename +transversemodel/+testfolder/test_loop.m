@@ -78,7 +78,7 @@ LOGDENS = 0; % Set to 1 to plot density logarithmicaly. Set to 0 for linear
 if LOGDENS
     r_nb = logspace(22,23, n_iter);           % Electron bulk density  [m^-3]  2*10^22 3*10^22 4*10^22 
 else
-    r_nb = linspace(10^22, 10^23, n_iter);
+    r_nb = linspace(10^22, 10^24, n_iter);
 end
 r_Te = linspace(e,3*e,T_iter);                      % Electron Temperature in joules (not eV!)
 r_phi_A =  logspace(1,3,T_iter);%[10 100 1000];                           % Anode potential 
@@ -89,13 +89,16 @@ u_ze = 10^4;             % Downstream (axial) flow velocity in m/s
 
 %By = 0.7;               % Magnetic field in Tesla
 
-d_J = 0;%0.01;
+d_J = 0%0.01;
 
 % Ionisation parameters 
 a_iz = 1;     %ionisation degree
 Z = 1;          %Ion charge number
 
 iter = 60
+% Iteration limit for outer loop on E_W
+OutLim = 20;
+epres = 10^-12;         % required precision for E_w
 
 %A_G1 =A_G*F_TEE;%      % Material Constant for shottkey equation
 %% Setting up tables
@@ -171,12 +174,12 @@ F_FEE=0; %Include FEE
 % for F_TEE = 0:1
 %     F_SEE = 1-F_TEE;
 for te = 1%:length(r_T_wkc)
-    for j = 1 %:n_iter
+    for j = 2 %:n_iter
         
         Te = r_Te(2); % Te= 2.5*e; %
         T_wka = r_T_wka(3);
         T_wkc = 3100;% r_T_wkc(te);
-        nb = r_nb(j);       % electron bulk density 10^22; %
+        nb = 1*10^22;%r_nb(j);       % electron bulk density 10^22; %
         %n_n = (1-a_iz)/a_iz*ne_0;
         phi_A = 1000; %r_phi_A(j);
         %By = 0;%.7;%r_B(j);
@@ -211,10 +214,11 @@ for te = 1%:length(r_T_wkc)
         plasma_properties = {Te, nb,a_iz,Z, m_i};
         design_parameters = {T_wka, T_wkc, E_i, A_G1, h, L, W, E_F};
         
-        
-        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_J, C_guess,  F_SEE, F_TEE, F_FEE,1);
+        %% First iteration, forcing E_w = 0
+        fix = 0;
+        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_J, C_guess,  F_SEE, F_TEE, F_FEE,fix)
 
-        output
+        output;
         
             % results including non resolved 
             if isreal(x)
@@ -244,45 +248,120 @@ for te = 1%:length(r_T_wkc)
 %         initial_state = [V_C*e/Te, V_A*e/Te,geC_em2, geA_em, E_wc, E_wa, uxe-(geC_em2-geC_em)/(2*nb)];% (E_wc+8.3*10^7)/2
 %         
 %         [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_J, C_guess,  F_SEE, F_TEE, F_FEE,0,initial_state);
+%       
+        %% Second iteration forcing E_w (in) = E_w(output) of previous iteration 
+        E_wc1 = E_wc
+        geC_em2 = F_TEE*schottky(T_wkc, W, E_wc , A_G1) + F_SEE*SEE(nb/2/Z*sqrt(Te/m_i), E_i, W); %geC_em+schottky(T_wkc, W, E_wc1 , A_G1,0)-schottky(T_wkc, W, E_wc , A_G1,0);
 %         
-        E_wc1 = E_wc;
-        geC_em2 = schottky(T_wkc, W, E_wc , A_G1,0) + SEE(nb/2/Z*sqrt(Te/m_i), E_i, W); %geC_em+schottky(T_wkc, W, E_wc1 , A_G1,0)-schottky(T_wkc, W, E_wc , A_G1,0);
-        initial_state = [V_C*e/Te, V_A*e/Te,geC_em2, geA_em, E_wc , E_wa, uxe-(geC_em2-geC_em)/(2*nb)];% (E_wc+8.3*10^7)/2
-        
-        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_J, C_guess,  F_SEE, F_TEE, F_FEE,0,initial_state);
-
-        %output
-            % results including non resolved 
-            if isreal(x)
-            ctr2 = ctr2 + 1;
-            InpuValues = {nb, Te/e,phi_A, T_wkc, T_wka, h, d_J, SEE_inc, TEE_inc, FEE_inc};
-            Input(ctr2,:) = InpuValues;         
-            Output(ctr2,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By};
-            Potential(ctr2,:) = {V_C, V_A, E_wc, E_wa, phi_B, phi_D, (phi_B - phi_D) / h};
-            IniTable(ctr2,:) = array2table([initial_state phi_A-initial_state(2)*Te/e phi_C-initial_state(1)*Te/e]);
-            
-            geC_bolz = ge_bolz(nb/2, Te, -V_C)*e;
-            SEE_C = SEE(nb/2/Z*sqrt(Te/m_i), E_i, W)*e;
-            TEE_C = schottky(T_wkc, W, E_wc, A_G)*e;
-            J = -e*nb*uxe;
-            geA_bolz = ge_bolz(nb/2, Te, -V_A)*e;
-            SEE_A = SEE(nb/2/Z*sqrt(Te/m_i), E_i, W)*e;
-            TEE_A = schottky(T_wka, W, E_wc, A_G)*e;
-            
-            Emissions(ctr2,:) = {geC_bolz, geC_em*e, SEE_C, TEE_C, geA_bolz, geA_em*e, SEE_A, TEE_A, J};
-            Error(ctr2,:) = array2table([fx exitflag]); %num2cell(fx);
-            end
-
-        if exitflag<=0
-        for i = 1:2
-            fx(1);
-        E_wc1 = E_wc+fx(1);
-        geC_em2 = geC_em+schottky(T_wkc, W, E_wc1 , A_G1,0)-schottky(T_wkc, W, E_wc , A_G1,0);
+%         E_guess2 = wall_e_field(T_wkc, V_C*e/Te,geC_em2,nb/2, Te)
+%         gem_guess2 = F_TEE*schottky(T_wkc, W, E_guess2 , A_G1) + F_SEE*SEE(nb/2/Z*sqrt(Te/m_i), E_i, W);
+% 
+%         E_guess3 = wall_e_field(T_wkc, V_C*e/Te,gem_guess2 ,nb/2, Te)
+%         gem_guess3 = F_TEE*schottky(T_wkc, W, E_guess3, A_G1) + F_SEE*SEE(nb/2/Z*sqrt(Te/m_i), E_i, W);
+% 
+% lmct = 0;
+% 
+% while abs(E_guess3-E_guess2)/E_guess2>10^-3
+%     
+%     if lmct>20
+%         disp("Intial guess for E_w did not converge after 20 iterations")
+%         break
+%     else
+%        lmct = lmct+1; 
+%     end
+%     E_guess2 = wall_e_field(T_wkc, V_C*e/Te,gem_guess3,nb/2, Te)
+%     gem_guess2 = F_TEE*schottky(T_wkc, W, E_guess2 , A_G1) + F_SEE*SEE(nb/2/Z*sqrt(Te/m_i), E_i, W);
+%     
+%     E_guess3 = wall_e_field(T_wkc, V_C*e/Te,gem_guess2 ,nb/2, Te)
+%     gem_guess3 = F_TEE*schottky(T_wkc, W, E_guess3, A_G1) + F_SEE*SEE(nb/2/Z*sqrt(Te/m_i), E_i, W);
+% 
+% end
+% 
+%     E_wc1 = wall_e_field(T_wkc, V_C*e/Te,gem_guess3 ,nb/2, Te); % E_guess1;%
+%     geC_em2 = F_TEE*schottky(T_wkc, W, E_wc1, A_G1) + F_SEE*SEE(nb/2/Z*sqrt(Te/m_i), E_i, W);
+% 
+%     
         initial_state = [V_C*e/Te, V_A*e/Te,geC_em2, geA_em, E_wc1 , E_wa, uxe-(geC_em2-geC_em)/(2*nb)];% (E_wc+8.3*10^7)/2
         
-        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_J, C_guess,  F_SEE, F_TEE, F_FEE,0,initial_state);
+        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_J, C_guess,  F_SEE, F_TEE, F_FEE,E_wc1,initial_state);
+
+        output
+            % results including non resolved 
+            if isreal(x)
+            ctr2 = ctr2 + 1;
+            InpuValues = {nb, Te/e,phi_A, T_wkc, T_wka, h, d_J, SEE_inc, TEE_inc, FEE_inc};
+            Input(ctr2,:) = InpuValues;         
+            Output(ctr2,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By};
+            Potential(ctr2,:) = {V_C, V_A, E_wc, E_wa, phi_B, phi_D, (phi_B - phi_D) / h};
+            IniTable(ctr2,:) = array2table([initial_state phi_A-initial_state(2)*Te/e phi_C-initial_state(1)*Te/e]);
+            
+            geC_bolz = ge_bolz(nb/2, Te, -V_C)*e;
+            SEE_C = SEE(nb/2/Z*sqrt(Te/m_i), E_i, W)*e;
+            TEE_C = schottky(T_wkc, W, E_wc, A_G)*e;
+            J = -e*nb*uxe;
+            geA_bolz = ge_bolz(nb/2, Te, -V_A)*e;
+            SEE_A = SEE(nb/2/Z*sqrt(Te/m_i), E_i, W)*e;
+            TEE_A = schottky(T_wka, W, E_wc, A_G)*e;
+            
+            Emissions(ctr2,:) = {geC_bolz, geC_em*e, SEE_C, TEE_C, geA_bolz, geA_em*e, SEE_A, TEE_A, J};
+            Error(ctr2,:) = array2table([fx exitflag]); %num2cell(fx);
+            end
+
+        %if exitflag<=0
+        %% Iterating between E_W is not forced and E_w is forced
         
-        %output
+        now = 0
+        for i = 1:OutLim 
+            disp("difference with previous E_w: ")
+           disp(E_wc1 - E_wc) 
+           
+           if (fix == -1)&&(exitflag>0)% (abs(E_wc1 - E_wc)/E_wc <epres)&&
+               disp("Outer iteration loop converged")
+               break            
+           end
+           disp("fx(1): ")
+           disp(fx(1))
+        if abs(E_wc1 - E_wc)/E_wc >10*epres%&&(now==0)%&&(exitflag<0)
+            fix = E_wc%(E_wc+E_wc1)/2
+            E_wc1 = E_wc%(E_wc+E_wc1)/2;
+%             now = 0;
+%         elseif exist('f2','var')&&(fix==-1)&&now% secant
+%             fix = -1  
+%             
+%             f1 = fx(1)%j_Ewc;
+%             x1 = E_wc;
+%             
+%             delta = f1*(x1-x2)/(f1-f2)
+%             
+%             E_wc1 = E_wc - delta
+%             
+%             f2 = f1;
+%             x2 = x1;
+%         elseif (fix==-1)&(now==0) %if (abs(fx(1)) < epres*E_wc*10^6)&&(fix==-1) % raphson 
+%             fix = -1
+%             E_wc
+%             j_Ewc
+%             f2 = fx(1)
+%             E_wc1 = E_wc + fx(1)
+%             %j_Ewc
+%             x2 = E_wc1;
+%             now = 1
+        else
+            fix = -1  
+            E_wc1 = E_wc% - fx(1);
+        end
+            
+            geC_em2 = F_TEE*schottky(T_wkc, W, E_wc , A_G1) + F_SEE*SEE(nb/2/Z*sqrt(Te/m_i), E_i, W); %geC_em2 = geC_em+schottky(T_wkc, W, E_wc1 , A_G1)-schottky(T_wkc, W, E_wc , A_G1);
+        initial_state = [V_C*e/Te, V_A*e/Te,geC_em2, geA_em, E_wc1 , E_wa, uxe-(geC_em2-geC_em)/(2*nb)];% (E_wc+8.3*10^7)/2
+        
+        [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output,j_Ewc] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_J, C_guess,  F_SEE, F_TEE, F_FEE,fix,initial_state);
+        
+        if (i == OutLim)&&((fix > -1)||(exitflag<=0))
+            fprintf("Outer iteration loop reached iteration limit (%d), no convergence \n",OutLim)
+        end
+            
+        
+        output
             % results including non resolved 
             if isreal(x)
             ctr2 = ctr2 + 1;
@@ -305,7 +384,6 @@ for te = 1%:length(r_T_wkc)
             end
 
         
-        end
         end
         if exitflag>0&&isreal(x)
             exitflag;

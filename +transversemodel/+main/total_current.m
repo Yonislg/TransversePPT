@@ -33,7 +33,7 @@ end
     
     %% the system of eqautions
     % Cathode electric field
-    jxe_v2(1) = wall_e_field(T_wkc, x(1),0,ne_0, Te) - x(5); %
+    jxe_v2(1) = wall_e_field(T_wkc, x(1),x(3),ne_0, Te) - x(5); %
     %Cathode lectron emissions
     if fix
         jxe_v2(2) = - x(3)  + schottky(T_wkc, W, x(5), A_G,fix)+ ge_SEE;% + FEE(W,E_F, x(5));
@@ -52,7 +52,7 @@ end
     % Anode electron emissions
     jxe_v2(5) =  - x(4)+ schottky(T_wka, W, x(6), A_G) + ge_SEE ; %  + FEE(W,E_F, x(6))
     % Anode electric field
-    jxe_v2(6) = wall_e_field(T_wka, x(2),0,ne_0, Te) -x(6);  
+    jxe_v2(6) = wall_e_field(T_wka, x(2),x(4),ne_0, Te) -x(6);  
     % Momentum equation
     if imeq
         jxe_v2(7) = -e*nb*(phi_A-x(2)*Te/e-(phi_C-x(1)*Te/e))/h - 0.5*mu_0*(e*nb)^2*u_ze*x(7)*d_J - x(7)*m_e*nb*(collRate_ei(ni_b,Z,Te));%+n_n*vth_e*10^(-20));%+ u_ze*(e*nb*L*x(7)*mu_0); % Bulk current
