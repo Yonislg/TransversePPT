@@ -110,11 +110,13 @@ epres = 10^-12;         % required precision for E_w
 OutputVarNames = {'Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity','Anode potential', 'Cathode potential','Magnetic Field'};
 varTypes2=repmat({'double'},1,length(OutputVarNames));
 sz2= [iter length(OutputVarNames)];
-linit = length(OutputVarNames)-1;
+OutpuTable = table('Size', sz2, 'VariableTypes',varTypes2, 'VariableNames', OutputVarNames);
+
+IniVarNames = {'Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity','E_Wc (forced)','Anode potential', 'Cathode potential'};
+linit = length(IniVarNames);
 sz4= [iter linit];
 varTypes4=repmat({'double'},1,linit);
-IniTable = table('Size', sz4, 'VariableTypes',varTypes4, 'VariableNames', OutputVarNames(1:linit));
- OutpuTable = table('Size', sz2, 'VariableTypes',varTypes2, 'VariableNames', OutputVarNames);
+IniTable = table('Size', sz4, 'VariableTypes',varTypes4, 'VariableNames', IniVarNames);
 
 ExitVarNames = {'ExitFlag', 'Cathode sheath potential drop','Anode sheath potential drop', 'Cathode emissions','Anode emissions', 'Cathode E-field','Anode E-field','electron bulk velocity'};
 varTypes3=['int8' repmat({'double'},1,length(ExitVarNames)-1)];
@@ -184,7 +186,7 @@ for te = 1%:length(r_T_wkc)
         phi_A = 1000; %r_phi_A(j);
         %By = 0;%.7;%r_B(j);
         h = 0.05;%r_h(te);
-        C_guess = 5%217.81; %r_C_guess(1);
+        C_guess = 5;%217.81; %r_C_guess(1);
         
         %
         
@@ -227,7 +229,7 @@ for te = 1%:length(r_T_wkc)
             Input(ctr2,:) = InpuValues;         
             Output(ctr2,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By};
             Potential(ctr2,:) = {V_C, V_A, E_wc, E_wa, phi_B, phi_D, (phi_B - phi_D) / h};
-            IniTable(ctr2,:) = array2table([initial_state phi_A-initial_state(2)*Te/e phi_C-initial_state(1)*Te/e]);
+            IniTable(ctr2,:) = array2table([initial_state fix phi_A-initial_state(2)*Te/e phi_C-initial_state(1)*Te/e]);
             
             geC_bolz = ge_bolz(nb/2, Te, -V_C)*e;
             SEE_C = SEE(nb/2/Z*sqrt(Te/m_i), E_i, W)*e;
@@ -293,7 +295,7 @@ for te = 1%:length(r_T_wkc)
             Input(ctr2,:) = InpuValues;         
             Output(ctr2,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By};
             Potential(ctr2,:) = {V_C, V_A, E_wc, E_wa, phi_B, phi_D, (phi_B - phi_D) / h};
-            IniTable(ctr2,:) = array2table([initial_state phi_A-initial_state(2)*Te/e phi_C-initial_state(1)*Te/e]);
+            IniTable(ctr2,:) = array2table([initial_state E_wc1 phi_A-initial_state(2)*Te/e phi_C-initial_state(1)*Te/e]);
             
             geC_bolz = ge_bolz(nb/2, Te, -V_C)*e;
             SEE_C = SEE(nb/2/Z*sqrt(Te/m_i), E_i, W)*e;
@@ -369,7 +371,7 @@ for te = 1%:length(r_T_wkc)
             Input(ctr2,:) = InpuValues;         
             Output(ctr2,:) = {V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By};
             Potential(ctr2,:) = {V_C, V_A, E_wc, E_wa, phi_B, phi_D, (phi_B - phi_D) / h};
-            IniTable(ctr2,:) = array2table([initial_state phi_A-initial_state(2)*Te/e phi_C-initial_state(1)*Te/e]);
+            IniTable(ctr2,:) = array2table([initial_state fix phi_A-initial_state(2)*Te/e phi_C-initial_state(1)*Te/e]);
             
             geC_bolz = ge_bolz(nb/2, Te, -V_C)*e;
             SEE_C = SEE(nb/2/Z*sqrt(Te/m_i), E_i, W)*e;
