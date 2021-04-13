@@ -250,7 +250,7 @@ for te = 1%:length(r_T_wkc)
 %         [V_C, V_A, geC_em, geA_em, E_wc, E_wa, uxe, phi_B, phi_D, By, x,fx,exitflag,initial_state,output] = transversal_V3(plasma_properties, design_parameters, phi_A,phi_C, u_ze, d_J, C_guess,  F_SEE, F_TEE, F_FEE,0,initial_state);
 %       
         %% Second iteration forcing E_w (in) = E_w(output) of previous iteration 
-        E_wc1 = E_wc;
+        E_wc1 = E_wc
         geC_em2 = F_TEE*schottky(T_wkc, W, E_wc , A_G1) + F_SEE*SEE(nb/2/Z*sqrt(Te/m_i), E_i, W); %geC_em+schottky(T_wkc, W, E_wc1 , A_G1,0)-schottky(T_wkc, W, E_wc , A_G1,0);
 %         
 %         E_guess2 = wall_e_field(T_wkc, V_C*e/Te,geC_em2,nb/2, Te)
