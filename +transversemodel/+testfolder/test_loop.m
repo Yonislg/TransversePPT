@@ -322,7 +322,7 @@ for te = 1%:length(r_T_wkc)
            disp("fx(1): ")
            disp(fx(1))
         if abs(E_wc1 - E_wc)/E_wc >10*epres%&&(now==0)%&&(exitflag<0)
-            fix = E_wc%(E_wc+E_wc1)/2
+            fix = E_wc;%(E_wc+E_wc1)/2
             E_wc1 = E_wc;%(E_wc+E_wc1)/2;
 %             now = 0;
 %         elseif exist('f2','var')&&(fix==-1)&&now% secant
